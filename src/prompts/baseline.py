@@ -125,7 +125,7 @@ below is from the official SemEval-2020 Task 11 annotation guidelines.
     NOTE: This is about CASTING DOUBT through insinuation, not about
     presenting counter-evidence or factual criticism.
 
-12. **Whataboutism**
+12. **Whataboutism,Straw_Men,Red_Herring**
     A technique that attempts to discredit an opponent's position by charging
     them with hypocrisy without directly disproving their argument.
     NOTE: SemEval merges this with Straw Man (misrepresenting someone's position
@@ -158,7 +158,7 @@ When a span could match multiple techniques, use this priority:
 4. If the text instills FEAR as the primary argument → Appeal_to_Fear
 5. If the text SIMPLIFIES causation to a single factor → Causal_Oversimplification
 6. If the text presents ONLY TWO OPTIONS → Black-and-White_Fallacy
-7. If the text DEFLECTS criticism by pointing to opponent's hypocrisy → Whataboutism
+7. If the text DEFLECTS criticism by pointing to opponent's hypocrisy → Whataboutism,Straw_Men,Red_Herring
 8. If the text SHUTS DOWN discussion with a stock phrase → Thought-terminating
 9. If the text cites an AUTHORITY as sole evidence → Appeal_to_Authority
 10. If the text CASTS DOUBT through insinuation → Doubt
@@ -246,7 +246,7 @@ Example 3 (whataboutism):
 ARTICLE: "President Trump —who himself avoided national military service in the 1960's— keeps beating the war drums over North Korea."
 ANNOTATIONS:
 {"annotations": [
-  {"text": "President Trump —who himself avoided national military service in the 1960's— keeps beating the war drums over North Korea", "type": "Whataboutism", "reason": "Deflects from the current policy discussion by charging hypocrisy about military service"}
+  {"text": "President Trump —who himself avoided national military service in the 1960's— keeps beating the war drums over North Korea", "type": "Whataboutism,Straw_Men,Red_Herring", "reason": "Deflects from the current policy discussion by charging hypocrisy about military service"}
 ]}
 
 Example 4 (no propaganda):

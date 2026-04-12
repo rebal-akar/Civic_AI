@@ -165,11 +165,11 @@ _TYPE_INDEX_TO_TECHNIQUE: dict[int, Technique] = {
     8: Technique.LOADED_LANGUAGE,
     9: Technique.NAME_CALLING,
     # 10: Obfuscation (in 18-category but not in our 14)
-    # 11: Red Herring (in 18-category but not in our 14)
-    12: Technique.BANDWAGON,  # Reductio ad hitlerum merged with Bandwagon
+    11: Technique.WHATABOUTISM,   # Red Herring → merged into Whataboutism
+    12: Technique.BANDWAGON,      # Reductio ad hitlerum → merged into Bandwagon
     13: Technique.REPETITION,
     14: Technique.SLOGANS,
-    # 15: Straw Men (in 18-category but not in our 14)
+    15: Technique.WHATABOUTISM,   # Straw Men → merged into Whataboutism
     16: Technique.THOUGHT_TERMINATING,
     17: Technique.WHATABOUTISM,
 }

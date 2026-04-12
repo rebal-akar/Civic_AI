@@ -19,6 +19,7 @@ STRATEGY_COLORS = {
     "cot": "#C44E52",
     "asv": "#8172B2",
     "consol": "#CCB974",
+    "hybrid": "#DD8452",
 }
 
 
@@ -189,3 +190,55 @@ def _plot_per_technique_f1(
     ax.legend(fontsize=11, loc="upper right")
     fig.tight_layout()
     return fig
+
+
+def generate_diagnostic_charts(
+    diagnostics: dict[str, Any],
+    output_prefix: Path,
+    strategy_label: str = "",
+) -> list[Path]:
+    """Generate diagnostic charts from compute_all_diagnostics output.
+
+    Currently a minimal implementation that saves a stage-by-stage F1 chart
+    when stage_snapshots data is available.
+    """
+    output_prefix = Path(output_prefix)
+    output_prefix.parent.mkdir(parents=True, exist_ok=True)
+    paths: list[Path] = []
+
+    stages = diagnostics.get("stage_by_stage_f1", {})
+    if stages:
+        fig, ax = plt.subplots(figsize=(8, 5))
+        stage_names = []
+        si_vals = []
+        tc_vals = []
+        for stage in ["after_s1", "after_s2", "after_s3"]:
+            if stage not in stages:
+                continue
+            stage_names.append(stage.replace("after_", "").upper())
+            si_vals.append(stages[stage]["si"]["f1"])
+            tc_vals.append(stages[stage]["tc"]["f1"])
+        if stage_names:
+            x = np.arange(len(stage_names))
+            w = 0.35
+            bars_si = ax.bar(x - w / 2, si_vals, w, label="SI F1", color="#4C72B0")
+            bars_tc = ax.bar(x + w / 2, tc_vals, w, label="TC F1", color="#C44E52")
+            _add_bar_labels(ax, bars_si)
+            _add_bar_labels(ax, bars_tc)
+            ax.set_xticks(x)
+            ax.set_xticklabels(stage_names)
+            ax.set_ylabel("F1 Score")
+            ax.set_ylim(0, 1.0)
+            title = "Stage-by-Stage F1"
+            if strategy_label:
+                title += f" — {strategy_label}"
+            ax.set_title(title, fontsize=12, fontweight="bold")
+            ax.legend()
+            ax.grid(axis="y", alpha=0.3)
+            fig.tight_layout()
+            p = Path(f"{output_prefix}_stage_f1.png")
+            fig.savefig(p, dpi=150)
+            paths.append(p)
+        plt.close(fig)
+
+    return paths
