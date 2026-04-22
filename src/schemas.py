@@ -173,7 +173,7 @@ class ExperimentConfig(BaseModel):
     strategy: str  # zero_shot, few_shot, cot, asv, consol, hybrid
     model: str = "gpt-4o"
     temperature: float = 0.0
-    max_tokens: int = 2048
+    max_tokens: int = 4096
     seed: int = 42
 
     asv_num_passes: int = 3
@@ -191,7 +191,7 @@ class ExperimentConfig(BaseModel):
 
     def run_id(self) -> str:
         key = (
-            f"{self.name}_{self.strategy}_{self.model}_"
+            f"{self.strategy}_{self.model}_"
             f"{self.verify_model}_{self.eval_mode}_{self.seed}"
         )
         return hashlib.md5(key.encode()).hexdigest()[:8]

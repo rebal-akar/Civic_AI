@@ -1,0 +1,739 @@
+{
+  "articles_used": [
+    "article111111111"
+  ],
+  "num_articles": 1,
+  "model": "gpt-4o",
+  "strategies": [
+    "zero_shot",
+    "asv"
+  ],
+  "asv_stages": 2,
+  "results": {
+    "zero_shot": {
+      "config": {
+        "name": "zero_shot_gpt-4o_n1",
+        "strategy": "zero_shot",
+        "model": "gpt-4o",
+        "temperature": 0.0,
+        "max_tokens": 2048,
+        "seed": 42,
+        "asv_num_passes": 3,
+        "asv_temperatures": [
+          0.5,
+          0.6,
+          0.7
+        ],
+        "asv_stages": 2,
+        "articles_dir": "data/splits/train/articles",
+        "labels_path": "data/splits/train/train-task2-TC.labels",
+        "max_articles": 1,
+        "max_cost_usd": 30.0
+      },
+      "metrics": {
+        "si_precision": 0.5128,
+        "si_recall": 0.406,
+        "si_f1": 0.4532,
+        "tc_precision": 0.37,
+        "tc_recall": 0.2405,
+        "tc_f1": 0.2915,
+        "f1_delta": 0.1617,
+        "macro_f1": 0.138,
+        "per_technique": {
+          "Loaded_Language": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 2
+          },
+          "Name_Calling,Labeling": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 0
+          },
+          "Repetition": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 1,
+            "pred_count": 0
+          },
+          "Exaggeration,Minimisation": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 1
+          },
+          "Doubt": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 1,
+            "pred_count": 0
+          },
+          "Appeal_to_Fear-Prejudice": {
+            "precision": 0.6474,
+            "recall": 0.481,
+            "f1": 0.552,
+            "gold_count": 4,
+            "pred_count": 4
+          },
+          "Flag-Waving": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 0
+          },
+          "Causal_Oversimplification": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 0
+          },
+          "Slogans": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 0
+          },
+          "Appeal_to_Authority": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 2,
+            "pred_count": 0
+          },
+          "Black-and-White_Fallacy": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 0
+          },
+          "Thought-terminating_Cliches": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 0
+          },
+          "Whataboutism": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 0
+          },
+          "Bandwagon,Reductio_ad_hitlerum": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 0
+          }
+        },
+        "total_gold_spans": 8,
+        "total_pred_spans": 7,
+        "total_pred_spans_raw": 7,
+        "total_articles": 1,
+        "unresolved_spans": 0
+      },
+      "cost": {
+        "total_cost_usd": 0.0100425,
+        "total_input_tokens": 2629,
+        "total_output_tokens": 347,
+        "num_calls": 1,
+        "calls": [
+          {
+            "model": "gpt-4o",
+            "input_tokens": 2629,
+            "output_tokens": 347,
+            "cost_usd": 0.0100425,
+            "timestamp": 1773956067.0524347
+          }
+        ]
+      },
+      "elapsed_seconds": 7.5,
+      "articles_processed": 1,
+      "predictions": {
+        "article111111111": {
+          "all_spans": [
+            {
+              "technique": "Appeal_to_Fear-Prejudice",
+              "span_text": "the next outbreak would likely be stronger",
+              "start": 219,
+              "end": 261,
+              "reasoning": "The statement instills fear about the future outbreak being more severe without presenting evidence.",
+              "agreement_count": 1,
+              "confidence": -1.0,
+              "verdict": "",
+              "critique_substitution_test": "",
+              "critique_innocent_explanation": "",
+              "critique_weakness": "",
+              "critique_verdict": ""
+            },
+            {
+              "technique": "Loaded_Language",
+              "span_text": "the issue is serious",
+              "start": 416,
+              "end": 436,
+              "reasoning": "The phrase uses emotionally charged language to emphasize the gravity of the situation.",
+              "agreement_count": 1,
+              "confidence": -1.0,
+              "verdict": "",
+              "critique_substitution_test": "",
+              "critique_innocent_explanation": "",
+              "critique_weakness": "",
+              "critique_verdict": ""
+            },
+            {
+              "technique": "Exaggeration,Minimisation",
+              "span_text": "plague in Madagascar behaved in a very, very different way this year",
+              "start": 1037,
+              "end": 1105,
+              "reasoning": "The phrase exaggerates the unusual behavior of the plague without providing specific details.",
+              "agreement_count": 1,
+              "confidence": -1.0,
+              "verdict": "",
+              "critique_substitution_test": "",
+              "critique_innocent_explanation": "",
+              "critique_weakness": "",
+              "critique_verdict": ""
+            },
+            {
+              "technique": "Appeal_to_Fear-Prejudice",
+              "span_text": "the danger was not over",
+              "start": 1593,
+              "end": 1616,
+              "reasoning": "The statement suggests ongoing risk to instill fear without providing specific evidence.",
+              "agreement_count": 1,
+              "confidence": -1.0,
+              "verdict": "",
+              "critique_substitution_test": "",
+              "critique_innocent_explanation": "",
+              "critique_weakness": "",
+              "critique_verdict": ""
+            },
+            {
+              "technique": "Appeal_to_Fear-Prejudice",
+              "span_text": "when (the plague) comes again it starts from more stock, and the magnitude in the next transmission could be higher than the one that we saw",
+              "start": 1795,
+              "end": 1935,
+              "reasoning": "The statement suggests a future outbreak could be worse, instilling fear without concrete evidence.",
+              "agreement_count": 1,
+              "confidence": -1.0,
+              "verdict": "",
+              "critique_substitution_test": "",
+              "critique_innocent_explanation": "",
+              "critique_weakness": "",
+              "critique_verdict": ""
+            },
+            {
+              "technique": "Appeal_to_Fear-Prejudice",
+              "span_text": "Madagascar could be affected more, and not only that, it could even spill over into neighbouring countries and beyond",
+              "start": 1969,
+              "end": 2086,
+              "reasoning": "The statement instills fear by suggesting the outbreak could spread beyond Madagascar.",
+              "agreement_count": 1,
+              "confidence": -1.0,
+              "verdict": "",
+              "critique_substitution_test": "",
+              "critique_innocent_explanation": "",
+              "critique_weakness": "",
+              "critique_verdict": ""
+            },
+            {
+              "technique": "Loaded_Language",
+              "span_text": "That's a dangerous combination",
+              "start": 2287,
+              "end": 2317,
+              "reasoning": "The phrase uses emotionally charged language to emphasize the threat posed by the combination of factors.",
+              "agreement_count": 1,
+              "confidence": -1.0,
+              "verdict": "",
+              "critique_substitution_test": "",
+              "critique_innocent_explanation": "",
+              "critique_weakness": "",
+              "critique_verdict": ""
+            }
+          ],
+          "confirmed_count": 7,
+          "total_count": 7,
+          "stage_outputs": {
+            "detection": "{\"annotations\": [{\"text\": \"the next outbreak would likely be stronger\", \"type\": \"Appeal_to_Fear-Prejudice\", \"reason\": \"The statement instills fear about the future outbreak being more severe without presenting evidence.\"}, {\"text\": \"the issue is serious\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase uses emotionally charged language to emphasize the gravity of the situation.\"}, {\"text\": \"plague in Madagascar behaved in a very, very different way this year\", \"type\": \"Exaggeration,Minimisation\", \"reason\": \"The phrase exaggerates the unusual behavior of the plague without providing specific details.\"}, {\"text\": \"the danger was not over\", \"type\": \"Appeal_to_Fear-Prejudice\", \"reason\": \"The statement suggests ongoing risk to instill fear without providing specific evidence.\"}, {\"text\": \"when (the plague) comes again it starts from more stock, and the magnitude in the next transmission could be higher than the one that we saw\", \"type\": \"Appeal_to_Fear-Prejudice\", \"reason\": \"The statement suggests a future outbreak could be worse, instilling fear without concrete evidence.\"}, {\"text\": \"Madagascar could be affected more, and not only that, it could even spill over into neighbouring countries and beyond\", \"type\": \"Appeal_to_Fear-Prejudice\", \"reason\": \"The statement instills fear by suggesting the outbreak could spread beyond Madagascar.\"}, {\"text\": \"That's a dangerous combination\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase uses emotionally charged language to emphasize the threat posed by the combination of factors.\"}]}"
+          }
+        }
+      }
+    },
+    "asv": {
+      "config": {
+        "name": "asv_gpt-4o_n1",
+        "strategy": "asv",
+        "model": "gpt-4o",
+        "temperature": 0.0,
+        "max_tokens": 2048,
+        "seed": 42,
+        "asv_num_passes": 3,
+        "asv_temperatures": [
+          0.5,
+          0.6,
+          0.7
+        ],
+        "asv_stages": 2,
+        "articles_dir": "data/splits/train/articles",
+        "labels_path": "data/splits/train/train-task2-TC.labels",
+        "max_articles": 1,
+        "max_cost_usd": 30.0
+      },
+      "metrics": {
+        "si_precision": 0.4316,
+        "si_recall": 0.3655,
+        "si_f1": 0.3958,
+        "tc_precision": 0.4316,
+        "tc_recall": 0.2405,
+        "tc_f1": 0.3089,
+        "f1_delta": 0.0869,
+        "macro_f1": 0.138,
+        "per_technique": {
+          "Loaded_Language": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 2
+          },
+          "Name_Calling,Labeling": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 0
+          },
+          "Repetition": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 1,
+            "pred_count": 0
+          },
+          "Exaggeration,Minimisation": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 0
+          },
+          "Doubt": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 1,
+            "pred_count": 0
+          },
+          "Appeal_to_Fear-Prejudice": {
+            "precision": 0.6474,
+            "recall": 0.481,
+            "f1": 0.552,
+            "gold_count": 4,
+            "pred_count": 4
+          },
+          "Flag-Waving": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 0
+          },
+          "Causal_Oversimplification": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 0
+          },
+          "Slogans": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 0
+          },
+          "Appeal_to_Authority": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 2,
+            "pred_count": 0
+          },
+          "Black-and-White_Fallacy": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 0
+          },
+          "Thought-terminating_Cliches": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 0
+          },
+          "Whataboutism": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 0
+          },
+          "Bandwagon,Reductio_ad_hitlerum": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "gold_count": 0,
+            "pred_count": 0
+          }
+        },
+        "total_gold_spans": 8,
+        "total_pred_spans": 6,
+        "total_pred_spans_raw": 6,
+        "total_articles": 1,
+        "unresolved_spans": 0
+      },
+      "cost": {
+        "total_cost_usd": 0.043722500000000004,
+        "total_input_tokens": 7089,
+        "total_output_tokens": 2600,
+        "num_calls": 4,
+        "calls": [
+          {
+            "model": "gpt-4o",
+            "input_tokens": 1750,
+            "output_tokens": 544,
+            "cost_usd": 0.009815,
+            "timestamp": 1773956074.903327
+          },
+          {
+            "model": "gpt-4o",
+            "input_tokens": 1750,
+            "output_tokens": 458,
+            "cost_usd": 0.008955000000000001,
+            "timestamp": 1773956082.155412
+          },
+          {
+            "model": "gpt-4o",
+            "input_tokens": 1750,
+            "output_tokens": 232,
+            "cost_usd": 0.006695,
+            "timestamp": 1773956086.346151
+          },
+          {
+            "model": "gpt-4o",
+            "input_tokens": 1839,
+            "output_tokens": 1366,
+            "cost_usd": 0.018257500000000003,
+            "timestamp": 1773956104.5227487
+          }
+        ]
+      },
+      "elapsed_seconds": 37.4,
+      "articles_processed": 1,
+      "predictions": {
+        "article111111111": {
+          "all_spans": [
+            {
+              "technique": "Appeal_to_Fear-Prejudice",
+              "span_text": "the next outbreak would likely be stronger",
+              "start": 219,
+              "end": 261,
+              "reasoning": "The statement suggests a future outbreak will be more severe, instilling fear about the potential impact.",
+              "agreement_count": 3,
+              "confidence": 50.0,
+              "verdict": "POSSIBLE",
+              "critique_substitution_test": "The statement is a prediction based on observed patterns and scientific understanding of the disease's behavior.",
+              "critique_innocent_explanation": "This is a factual prediction based on the current understanding of the disease's behavior and the conditions in Madagascar.",
+              "critique_weakness": "The statement is grounded in scientific reasoning rather than an attempt to incite fear.",
+              "critique_verdict": "CHALLENGE"
+            },
+            {
+              "technique": "Appeal_to_Fear-Prejudice",
+              "span_text": "The next transmission could be more pronounced or stronger",
+              "start": 265,
+              "end": 323,
+              "reasoning": "This warning about the next transmission being 'more pronounced or stronger' is meant to instill fear about the severity of future outbreaks.",
+              "agreement_count": 1,
+              "confidence": 30.0,
+              "verdict": "REJECTED",
+              "critique_substitution_test": "The statement is a cautious prediction based on the current epidemiological data.",
+              "critique_innocent_explanation": "This is a legitimate warning based on the potential for increased transmission due to existing conditions.",
+              "critique_weakness": "The statement is speculative but grounded in scientific analysis, not fear-mongering.",
+              "critique_verdict": "CHALLENGE"
+            },
+            {
+              "technique": "Appeal_to_Fear-Prejudice",
+              "span_text": "the issue is serious",
+              "start": 416,
+              "end": 436,
+              "reasoning": "Emphasizing the seriousness of the issue is intended to create a sense of urgency and fear.",
+              "agreement_count": 1,
+              "confidence": 30.0,
+              "verdict": "REJECTED",
+              "critique_substitution_test": "The seriousness of the issue is supported by the factual data on the outbreak's impact.",
+              "critique_innocent_explanation": "This is a factual statement reflecting the gravity of the situation based on the number of cases and deaths.",
+              "critique_weakness": "The statement is proportionate to the factual claims about the outbreak's severity.",
+              "critique_verdict": "CHALLENGE"
+            },
+            {
+              "technique": "Loaded_Language",
+              "span_text": "the issue is serious.",
+              "start": 416,
+              "end": 437,
+              "reasoning": "The use of the word 'serious' adds emotional weight to emphasize the gravity of the situation.",
+              "agreement_count": 2,
+              "confidence": 50.0,
+              "verdict": "POSSIBLE",
+              "critique_substitution_test": "The statement emphasizes the factual severity of the outbreak.",
+              "critique_innocent_explanation": "This is a straightforward description of the situation's gravity, not an attempt to manipulate emotions.",
+              "critique_weakness": "The language is factual and proportionate to the situation described.",
+              "critique_verdict": "CHALLENGE"
+            },
+            {
+              "technique": "Loaded_Language",
+              "span_text": "plague in Madagascar behaved in a very, very different way this year",
+              "start": 1037,
+              "end": 1105,
+              "reasoning": "The phrase 'very, very different' is emotionally charged, suggesting an unusual and alarming situation.",
+              "agreement_count": 1,
+              "confidence": 30.0,
+              "verdict": "REJECTED",
+              "critique_substitution_test": "The statement highlights a factual deviation from expected patterns.",
+              "critique_innocent_explanation": "This is an observation of unusual epidemiological behavior, not an attempt to exaggerate.",
+              "critique_weakness": "The repetition of 'very' emphasizes the factual deviation without exaggerating beyond the data.",
+              "critique_verdict": "CHALLENGE"
+            },
+            {
+              "technique": "Exaggeration,Minimisation",
+              "span_text": "plague in Madagascar behaved in a very, very different way this year.",
+              "start": 1037,
+              "end": 1106,
+              "reasoning": "The phrase 'very, very different way' exaggerates the uniqueness of the situation.",
+              "agreement_count": 1,
+              "confidence": 30.0,
+              "verdict": "REJECTED",
+              "critique_substitution_test": "The statement is a factual observation of the outbreak's atypical characteristics.",
+              "critique_innocent_explanation": "This is a factual statement about the unusual nature of the outbreak, not an exaggeration.",
+              "critique_weakness": "The statement is supported by the data on the outbreak's atypical spread and timing.",
+              "critique_verdict": "CHALLENGE"
+            },
+            {
+              "technique": "Appeal_to_Fear-Prejudice",
+              "span_text": "the pneumonic version, which spreads more easily and is more virulent",
+              "start": 1369,
+              "end": 1438,
+              "reasoning": "Describing the pneumonic version as spreading more easily and being more virulent is intended to evoke fear due to its increased danger.",
+              "agreement_count": 1,
+              "confidence": 30.0,
+              "verdict": "REJECTED",
+              "critique_substitution_test": "The statement is a factual description of the pneumonic plague's characteristics.",
+              "critique_innocent_explanation": "This is a factual description of the disease's properties, not an attempt to incite fear.",
+              "critique_weakness": "The statement is informative and based on scientific understanding of the disease.",
+              "critique_verdict": "CHALLENGE"
+            },
+            {
+              "technique": "Loaded_Language",
+              "span_text": "the pneumonic version, which spreads more easily and is more virulent",
+              "start": 1369,
+              "end": 1438,
+              "reasoning": "The words 'more easily' and 'more virulent' carry strong negative connotations, emphasizing the danger.",
+              "agreement_count": 1,
+              "confidence": 30.0,
+              "verdict": "REJECTED",
+              "critique_substitution_test": "The statement provides factual information about the disease's transmission and virulence.",
+              "critique_innocent_explanation": "This is a factual description necessary for understanding the public health risk.",
+              "critique_weakness": "The language is factual and necessary for conveying the seriousness of the disease.",
+              "critique_verdict": "CHALLENGE"
+            },
+            {
+              "technique": "Appeal_to_Fear-Prejudice",
+              "span_text": "the danger was not over",
+              "start": 1593,
+              "end": 1616,
+              "reasoning": "This phrase suggests ongoing risk and uncertainty, instilling fear about future outbreaks.",
+              "agreement_count": 2,
+              "confidence": 50.0,
+              "verdict": "POSSIBLE",
+              "critique_substitution_test": "The statement is a factual warning based on the potential for future outbreaks.",
+              "critique_innocent_explanation": "This is a factual statement reflecting the ongoing risk of the disease.",
+              "critique_weakness": "The statement is proportionate to the factual risk of future outbreaks.",
+              "critique_verdict": "CHALLENGE"
+            },
+            {
+              "technique": "Appeal_to_Fear-Prejudice",
+              "span_text": "when (the plague) comes again it starts from more stock, and the magnitude in the next transmission could be higher than the one that we saw",
+              "start": 1795,
+              "end": 1935,
+              "reasoning": "This statement warns of a potentially larger future outbreak, creating fear about its impact.",
+              "agreement_count": 2,
+              "confidence": 50.0,
+              "verdict": "POSSIBLE",
+              "critique_substitution_test": "The statement is a factual prediction based on the current epidemiological understanding.",
+              "critique_innocent_explanation": "This is a scientific prediction based on the current conditions and past patterns.",
+              "critique_weakness": "The statement is grounded in factual analysis rather than fear-mongering.",
+              "critique_verdict": "CHALLENGE"
+            },
+            {
+              "technique": "Appeal_to_Fear-Prejudice",
+              "span_text": "Madagascar could be affected more, and not only that, it could even spill over into neighbouring countries and beyond",
+              "start": 1969,
+              "end": 2086,
+              "reasoning": "This warning about the potential spread to neighboring countries is designed to evoke fear of a wider epidemic.",
+              "agreement_count": 3,
+              "confidence": 50.0,
+              "verdict": "POSSIBLE",
+              "critique_substitution_test": "The statement is a factual warning based on the potential for regional spread.",
+              "critique_innocent_explanation": "This is a legitimate warning about the potential for regional spread based on current conditions.",
+              "critique_weakness": "The statement is proportionate to the factual risk of regional spread.",
+              "critique_verdict": "CHALLENGE"
+            },
+            {
+              "technique": "Loaded_Language",
+              "span_text": "That's a dangerous combination",
+              "start": 2287,
+              "end": 2317,
+              "reasoning": "The phrase 'dangerous combination' is used to evoke fear and emphasize the severity of the situation.",
+              "agreement_count": 3,
+              "confidence": 50.0,
+              "verdict": "POSSIBLE",
+              "critique_substitution_test": "The statement summarizes the factual risks associated with the current conditions.",
+              "critique_innocent_explanation": "This is a factual statement summarizing the risks posed by the combination of factors.",
+              "critique_weakness": "The language is factual and proportionate to the risks described.",
+              "critique_verdict": "CHALLENGE"
+            }
+          ],
+          "confirmed_count": 6,
+          "total_count": 12,
+          "stage_outputs": {
+            "stage1_raw": [
+              "{\n  \"annotations\": [\n    {\n      \"text\": \"the next outbreak would likely be stronger\",\n      \"type\": \"Appeal_to_Fear-Prejudice\",\n      \"reason\": \"The statement suggests a future outbreak will be more severe, instilling fear about the potential impact.\"\n    },\n    {\n      \"text\": \"The next transmission could be more pronounced or stronger\",\n      \"type\": \"Appeal_to_Fear-Prejudice\",\n      \"reason\": \"This warning about the next transmission being 'more pronounced or stronger' is meant to instill fear about the severity of future outbreaks.\"\n    },\n    {\n      \"text\": \"the issue is serious\",\n      \"type\": \"Appeal_to_Fear-Prejudice\",\n      \"reason\": \"Emphasizing the seriousness of the issue is intended to create a sense of urgency and fear.\"\n    },\n    {\n      \"text\": \"plague in Madagascar behaved in a very, very different way this year\",\n      \"type\": \"Loaded_Language\",\n      \"reason\": \"The phrase 'very, very different' is emotionally charged, suggesting an unusual and alarming situation.\"\n    },\n    {\n      \"text\": \"the pneumonic version, which spreads more easily and is more virulent\",\n      \"type\": \"Appeal_to_Fear-Prejudice\",\n      \"reason\": \"Describing the pneumonic version as spreading more easily and being more virulent is intended to evoke fear due to its increased danger.\"\n    },\n    {\n      \"text\": \"the danger was not over\",\n      \"type\": \"Appeal_to_Fear-Prejudice\",\n      \"reason\": \"This phrase suggests ongoing risk and uncertainty, instilling fear about future outbreaks.\"\n    },\n    {\n      \"text\": \"when (the plague) comes again it starts from more stock, and the magnitude in the next transmission could be higher than the one that we saw\",\n      \"type\": \"Appeal_to_Fear-Prejudice\",\n      \"reason\": \"This statement warns of a potentially larger future outbreak, creating fear about its impact.\"\n    },\n    {\n      \"text\": \"Madagascar could be affected more, and not only that, it could even spill over into neighbouring countries and beyond\",\n      \"type\": \"Appeal_to_Fear-Prejudice\",\n      \"reason\": \"This warning about the potential spread to neighboring countries is designed to evoke fear of a wider epidemic.\"\n    },\n    {\n      \"text\": \"That's a dangerous combination\",\n      \"type\": \"Loaded_Language\",\n      \"reason\": \"The phrase 'dangerous combination' uses emotionally charged language to emphasize the threat.\"\n    }\n  ]\n}",
+              "{\n  \"annotations\": [\n    {\n      \"text\": \"the next outbreak would likely be stronger.\",\n      \"type\": \"Appeal_to_Fear-Prejudice\",\n      \"reason\": \"The statement suggests an impending threat, instilling anxiety about a future event.\"\n    },\n    {\n      \"text\": \"the issue is serious.\",\n      \"type\": \"Loaded_Language\",\n      \"reason\": \"The use of the word 'serious' adds a strong emotional implication to the situation.\"\n    },\n    {\n      \"text\": \"plague in Madagascar behaved in a very, very different way this year.\",\n      \"type\": \"Exaggeration,Minimisation\",\n      \"reason\": \"The phrase 'very, very different way' exaggerates the uniqueness of the situation.\"\n    },\n    {\n      \"text\": \"the pneumonic version, which spreads more easily and is more virulent\",\n      \"type\": \"Loaded_Language\",\n      \"reason\": \"The words 'more easily' and 'more virulent' carry strong negative connotations, emphasizing the danger.\"\n    },\n    {\n      \"text\": \"the danger was not over.\",\n      \"type\": \"Appeal_to_Fear-Prejudice\",\n      \"reason\": \"The statement implies that the threat persists, maintaining a sense of fear.\"\n    },\n    {\n      \"text\": \"when (the plague) comes again it starts from more stock, and the magnitude in the next transmission could be higher than the one that we saw\",\n      \"type\": \"Appeal_to_Fear-Prejudice\",\n      \"reason\": \"The prediction of a more severe future outbreak instills fear about the potential impact.\"\n    },\n    {\n      \"text\": \"Madagascar could be affected more, and not only that, it could even spill over into neighbouring countries and beyond\",\n      \"type\": \"Appeal_to_Fear-Prejudice\",\n      \"reason\": \"The statement suggests a broader and more severe impact, increasing the sense of threat.\"\n    },\n    {\n      \"text\": \"That's a dangerous combination\",\n      \"type\": \"Loaded_Language\",\n      \"reason\": \"The phrase 'dangerous combination' is emotionally charged, emphasizing the threat.\"\n    }\n  ]\n}",
+              "{\n  \"annotations\": [\n    {\n      \"text\": \"but warned the next outbreak would likely be stronger.\",\n      \"type\": \"Appeal_to_Fear-Prejudice\",\n      \"reason\": \"The statement is intended to instill fear by suggesting that the next outbreak could be more severe.\"\n    },\n    {\n      \"text\": \"the issue is serious.\",\n      \"type\": \"Loaded_Language\",\n      \"reason\": \"The use of the word 'serious' adds emotional weight to emphasize the gravity of the situation.\"\n    },\n    {\n      \"text\": \"Madagascar could be affected more, and not only that, it could even spill over into neighbouring countries and beyond\",\n      \"type\": \"Appeal_to_Fear-Prejudice\",\n      \"reason\": \"This statement is intended to instill fear by suggesting that the outbreak could spread beyond Madagascar.\"\n    },\n    {\n      \"text\": \"That's a dangerous combination\",\n      \"type\": \"Loaded_Language\",\n      \"reason\": \"The phrase 'dangerous combination' is used to evoke fear and emphasize the severity of the situation.\"\n    }\n  ]\n}"
+            ],
+            "stage1_per_pass_counts": [
+              9,
+              8,
+              4
+            ],
+            "stage1_merged_count": 12,
+            "stage2_raw": "{\n  \"critiques\": [\n    {\n      \"span_text\": \"the next outbreak would likely be stronger\",\n      \"technique\": \"Appeal_to_Fear-Prejudice\",\n      \"substitution_test\": \"The statement is a prediction based on observed patterns and scientific understanding of the disease's behavior.\",\n      \"innocent_explanation\": \"This is a factual prediction based on the current understanding of the disease's behavior and the conditions in Madagascar.\",\n      \"weakness\": \"The statement is grounded in scientific reasoning rather than an attempt to incite fear.\",\n      \"verdict\": \"CHALLENGE\"\n    },\n    {\n      \"span_text\": \"The next transmission could be more pronounced or stronger\",\n      \"technique\": \"Appeal_to_Fear-Prejudice\",\n      \"substitution_test\": \"The statement is a cautious prediction based on the current epidemiological data.\",\n      \"innocent_explanation\": \"This is a legitimate warning based on the potential for increased transmission due to existing conditions.\",\n      \"weakness\": \"The statement is speculative but grounded in scientific analysis, not fear-mongering.\",\n      \"verdict\": \"CHALLENGE\"\n    },\n    {\n      \"span_text\": \"the issue is serious\",\n      \"technique\": \"Appeal_to_Fear-Prejudice\",\n      \"substitution_test\": \"The seriousness of the issue is supported by the factual data on the outbreak's impact.\",\n      \"innocent_explanation\": \"This is a factual statement reflecting the gravity of the situation based on the number of cases and deaths.\",\n      \"weakness\": \"The statement is proportionate to the factual claims about the outbreak's severity.\",\n      \"verdict\": \"CHALLENGE\"\n    },\n    {\n      \"span_text\": \"the issue is serious.\",\n      \"technique\": \"Loaded_Language\",\n      \"substitution_test\": \"The statement emphasizes the factual severity of the outbreak.\",\n      \"innocent_explanation\": \"This is a straightforward description of the situation's gravity, not an attempt to manipulate emotions.\",\n      \"weakness\": \"The language is factual and proportionate to the situation described.\",\n      \"verdict\": \"CHALLENGE\"\n    },\n    {\n      \"span_text\": \"plague in Madagascar behaved in a very, very different way this year\",\n      \"technique\": \"Loaded_Language\",\n      \"substitution_test\": \"The statement highlights a factual deviation from expected patterns.\",\n      \"innocent_explanation\": \"This is an observation of unusual epidemiological behavior, not an attempt to exaggerate.\",\n      \"weakness\": \"The repetition of 'very' emphasizes the factual deviation without exaggerating beyond the data.\",\n      \"verdict\": \"CHALLENGE\"\n    },\n    {\n      \"span_text\": \"plague in Madagascar behaved in a very, very different way this year.\",\n      \"technique\": \"Exaggeration,Minimisation\",\n      \"substitution_test\": \"The statement is a factual observation of the outbreak's atypical characteristics.\",\n      \"innocent_explanation\": \"This is a factual statement about the unusual nature of the outbreak, not an exaggeration.\",\n      \"weakness\": \"The statement is supported by the data on the outbreak's atypical spread and timing.\",\n      \"verdict\": \"CHALLENGE\"\n    },\n    {\n      \"span_text\": \"the pneumonic version, which spreads more easily and is more virulent\",\n      \"technique\": \"Appeal_to_Fear-Prejudice\",\n      \"substitution_test\": \"The statement is a factual description of the pneumonic plague's characteristics.\",\n      \"innocent_explanation\": \"This is a factual description of the disease's properties, not an attempt to incite fear.\",\n      \"weakness\": \"The statement is informative and based on scientific understanding of the disease.\",\n      \"verdict\": \"CHALLENGE\"\n    },\n    {\n      \"span_text\": \"the pneumonic version, which spreads more easily and is more virulent\",\n      \"technique\": \"Loaded_Language\",\n      \"substitution_test\": \"The statement provides factual information about the disease's transmission and virulence.\",\n      \"innocent_explanation\": \"This is a factual description necessary for understanding the public health risk.\",\n      \"weakness\": \"The language is factual and necessary for conveying the seriousness of the disease.\",\n      \"verdict\": \"CHALLENGE\"\n    },\n    {\n      \"span_text\": \"the danger was not over\",\n      \"technique\": \"Appeal_to_Fear-Prejudice\",\n      \"substitution_test\": \"The statement is a factual warning based on the potential for future outbreaks.\",\n      \"innocent_explanation\": \"This is a factual statement reflecting the ongoing risk of the disease.\",\n      \"weakness\": \"The statement is proportionate to the factual risk of future outbreaks.\",\n      \"verdict\": \"CHALLENGE\"\n    },\n    {\n      \"span_text\": \"when (the plague) comes again it starts from more stock, and the magnitude in the next transmission could be higher than the one that we saw\",\n      \"technique\": \"Appeal_to_Fear-Prejudice\",\n      \"substitution_test\": \"The statement is a factual prediction based on the current epidemiological understanding.\",\n      \"innocent_explanation\": \"This is a scientific prediction based on the current conditions and past patterns.\",\n      \"weakness\": \"The statement is grounded in factual analysis rather than fear-mongering.\",\n      \"verdict\": \"CHALLENGE\"\n    },\n    {\n      \"span_text\": \"Madagascar could be affected more, and not only that, it could even spill over into neighbouring countries and beyond\",\n      \"technique\": \"Appeal_to_Fear-Prejudice\",\n      \"substitution_test\": \"The statement is a factual warning based on the potential for regional spread.\",\n      \"innocent_explanation\": \"This is a legitimate warning about the potential for regional spread based on current conditions.\",\n      \"weakness\": \"The statement is proportionate to the factual risk of regional spread.\",\n      \"verdict\": \"CHALLENGE\"\n    },\n    {\n      \"span_text\": \"That's a dangerous combination\",\n      \"technique\": \"Loaded_Language\",\n      \"substitution_test\": \"The statement summarizes the factual risks associated with the current conditions.\",\n      \"innocent_explanation\": \"This is a factual statement summarizing the risks posed by the combination of factors.\",\n      \"weakness\": \"The language is factual and proportionate to the risks described.\",\n      \"verdict\": \"CHALLENGE\"\n    }\n  ]\n}",
+            "stage2_critiques": [
+              {
+                "span_text": "the next outbreak would likely be stronger",
+                "technique": "Appeal_to_Fear-Prejudice",
+                "substitution_test": "The statement is a prediction based on observed patterns and scientific understanding of the disease's behavior.",
+                "innocent_explanation": "This is a factual prediction based on the current understanding of the disease's behavior and the conditions in Madagascar.",
+                "weakness": "The statement is grounded in scientific reasoning rather than an attempt to incite fear.",
+                "verdict": "CHALLENGE"
+              },
+              {
+                "span_text": "The next transmission could be more pronounced or stronger",
+                "technique": "Appeal_to_Fear-Prejudice",
+                "substitution_test": "The statement is a cautious prediction based on the current epidemiological data.",
+                "innocent_explanation": "This is a legitimate warning based on the potential for increased transmission due to existing conditions.",
+                "weakness": "The statement is speculative but grounded in scientific analysis, not fear-mongering.",
+                "verdict": "CHALLENGE"
+              },
+              {
+                "span_text": "the issue is serious",
+                "technique": "Appeal_to_Fear-Prejudice",
+                "substitution_test": "The seriousness of the issue is supported by the factual data on the outbreak's impact.",
+                "innocent_explanation": "This is a factual statement reflecting the gravity of the situation based on the number of cases and deaths.",
+                "weakness": "The statement is proportionate to the factual claims about the outbreak's severity.",
+                "verdict": "CHALLENGE"
+              },
+              {
+                "span_text": "the issue is serious.",
+                "technique": "Loaded_Language",
+                "substitution_test": "The statement emphasizes the factual severity of the outbreak.",
+                "innocent_explanation": "This is a straightforward description of the situation's gravity, not an attempt to manipulate emotions.",
+                "weakness": "The language is factual and proportionate to the situation described.",
+                "verdict": "CHALLENGE"
+              },
+              {
+                "span_text": "plague in Madagascar behaved in a very, very different way this year",
+                "technique": "Loaded_Language",
+                "substitution_test": "The statement highlights a factual deviation from expected patterns.",
+                "innocent_explanation": "This is an observation of unusual epidemiological behavior, not an attempt to exaggerate.",
+                "weakness": "The repetition of 'very' emphasizes the factual deviation without exaggerating beyond the data.",
+                "verdict": "CHALLENGE"
+              },
+              {
+                "span_text": "plague in Madagascar behaved in a very, very different way this year.",
+                "technique": "Exaggeration,Minimisation",
+                "substitution_test": "The statement is a factual observation of the outbreak's atypical characteristics.",
+                "innocent_explanation": "This is a factual statement about the unusual nature of the outbreak, not an exaggeration.",
+                "weakness": "The statement is supported by the data on the outbreak's atypical spread and timing.",
+                "verdict": "CHALLENGE"
+              },
+              {
+                "span_text": "the pneumonic version, which spreads more easily and is more virulent",
+                "technique": "Appeal_to_Fear-Prejudice",
+                "substitution_test": "The statement is a factual description of the pneumonic plague's characteristics.",
+                "innocent_explanation": "This is a factual description of the disease's properties, not an attempt to incite fear.",
+                "weakness": "The statement is informative and based on scientific understanding of the disease.",
+                "verdict": "CHALLENGE"
+              },
+              {
+                "span_text": "the pneumonic version, which spreads more easily and is more virulent",
+                "technique": "Loaded_Language",
+                "substitution_test": "The statement provides factual information about the disease's transmission and virulence.",
+                "innocent_explanation": "This is a factual description necessary for understanding the public health risk.",
+                "weakness": "The language is factual and necessary for conveying the seriousness of the disease.",
+                "verdict": "CHALLENGE"
+              },
+              {
+                "span_text": "the danger was not over",
+                "technique": "Appeal_to_Fear-Prejudice",
+                "substitution_test": "The statement is a factual warning based on the potential for future outbreaks.",
+                "innocent_explanation": "This is a factual statement reflecting the ongoing risk of the disease.",
+                "weakness": "The statement is proportionate to the factual risk of future outbreaks.",
+                "verdict": "CHALLENGE"
+              },
+              {
+                "span_text": "when (the plague) comes again it starts from more stock, and the magnitude in the next transmission could be higher than the one that we saw",
+                "technique": "Appeal_to_Fear-Prejudice",
+                "substitution_test": "The statement is a factual prediction based on the current epidemiological understanding.",
+                "innocent_explanation": "This is a scientific prediction based on the current conditions and past patterns.",
+                "weakness": "The statement is grounded in factual analysis rather than fear-mongering.",
+                "verdict": "CHALLENGE"
+              },
+              {
+                "span_text": "Madagascar could be affected more, and not only that, it could even spill over into neighbouring countries and beyond",
+                "technique": "Appeal_to_Fear-Prejudice",
+                "substitution_test": "The statement is a factual warning based on the potential for regional spread.",
+                "innocent_explanation": "This is a legitimate warning about the potential for regional spread based on current conditions.",
+                "weakness": "The statement is proportionate to the factual risk of regional spread.",
+                "verdict": "CHALLENGE"
+              },
+              {
+                "span_text": "That's a dangerous combination",
+                "technique": "Loaded_Language",
+                "substitution_test": "The statement summarizes the factual risks associated with the current conditions.",
+                "innocent_explanation": "This is a factual statement summarizing the risks posed by the combination of factors.",
+                "weakness": "The language is factual and proportionate to the risks described.",
+                "verdict": "CHALLENGE"
+              }
+            ],
+            "stage2_critiques_count": 12
+          }
+        }
+      }
+    }
+  }
+}

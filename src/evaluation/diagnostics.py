@@ -257,76 +257,81 @@ def stage_by_stage_f1(
     predictions: dict[str, Prediction],
     overlap_threshold: float = 0.25,
 ) -> dict[str, dict[str, float]]:
-    """Compute SI/TC F1 from each stage snapshot (after_s1, after_s2, after_s3).
+    """Compute SI/TC F1 from each stage snapshot using the official SemEval formula.
+
+    Rebuilds a Prediction from each snapshot's spans and runs evaluate()
+    so the numbers are directly comparable to the headline metrics.
 
     Filters each snapshot to only spans that would be "confirmed" at that stage:
         after_s1 → all spans (union of passes)
         after_s2 → verdict in CONFIRMED, POSSIBLE
         after_s3 → verdict in CONFIRMED, POSSIBLE
     """
+    from src.evaluation.metrics import evaluate
+    from src.schemas import PredictedSpan, normalise_technique
+
     article_by_id = {a.id: a for a in articles}
     stages = ["after_s1", "after_s2", "after_s3"]
     results: dict[str, dict[str, float]] = {}
 
     for stage in stages:
-        si_tp = si_fp = si_fn = 0
-        tc_tp = tc_fp = tc_fn = 0
-        any_data = False
+        stage_articles = []
+        stage_predictions: dict[str, Prediction] = {}
 
         for aid, pred in predictions.items():
             article = article_by_id.get(aid)
             if not article or stage not in pred.stage_snapshots:
                 continue
-            any_data = True
+
             snap = pred.stage_snapshots[stage]
             if stage == "after_s1":
-                # S1 spans have no verdict yet — include all
                 active = snap
             else:
-                # S2/S3: only CONFIRMED + POSSIBLE (not empty verdicts)
                 active = [
                     s for s in snap
                     if s.get("verdict") in ("CONFIRMED", "POSSIBLE")
                 ]
-            matched_gold_si = set()
-            matched_gold_tc = set()
-            for p in active:
-                si_m, tc_m = _span_matches_gold(
-                    p["technique"], p["start"], p["end"], p["span_text"],
-                    article.gold_spans, article.text, overlap_threshold,
-                )
-                if si_m:
-                    si_tp += 1
-                else:
-                    si_fp += 1
-                if tc_m:
-                    tc_tp += 1
-                else:
-                    tc_fp += 1
-                for i, g in enumerate(article.gold_spans):
-                    ov_s = max(p["start"], g.start)
-                    ov_e = min(p["end"], g.end)
-                    if ov_e > ov_s:
-                        ov = ov_e - ov_s
-                        ml = min(max(1, p["end"] - p["start"]), max(1, g.end - g.start))
-                        if ov / ml >= overlap_threshold:
-                            matched_gold_si.add(i)
-                            if g.technique.value == p["technique"]:
-                                matched_gold_tc.add(i)
 
-            si_fn += len(article.gold_spans) - len(matched_gold_si)
-            tc_fn += len(article.gold_spans) - len(matched_gold_tc)
+            rebuilt_spans = []
+            for s in active:
+                tech = normalise_technique(s.get("technique", ""))
+                if tech is None:
+                    continue
+                rebuilt_spans.append(PredictedSpan(
+                    technique=tech,
+                    span_text=s.get("span_text", ""),
+                    start=s.get("start", -1),
+                    end=s.get("end", -1),
+                    verdict=s.get("verdict", "CONFIRMED"),
+                    agreement_count=s.get("agreement_count", 1),
+                    confidence=s.get("confidence", -1.0),
+                ))
 
-        if not any_data:
+            stage_articles.append(article)
+            stage_predictions[aid] = Prediction(
+                article_id=aid,
+                spans=rebuilt_spans,
+                eval_mode=pred.eval_mode,
+            )
+
+        if not stage_articles:
             continue
 
-        def _f1(tp, fp, fn):
-            p = tp / (tp + fp) if (tp + fp) > 0 else 0.0
-            r = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-            f = 2 * p * r / (p + r) if (p + r) > 0 else 0.0
-            return {"precision": p, "recall": r, "f1": f}
-
-        results[stage] = {"si": _f1(si_tp, si_fp, si_fn), "tc": _f1(tc_tp, tc_fp, tc_fn)}
+        metrics = evaluate(stage_articles, stage_predictions)
+        results[stage] = {
+            "si": {
+                "precision": metrics.si_precision,
+                "recall": metrics.si_recall,
+                "f1": metrics.si_f1,
+            },
+            "tc": {
+                "precision": metrics.tc_precision,
+                "recall": metrics.tc_recall,
+                "f1": metrics.tc_f1,
+            },
+            "macro_f1": metrics.macro_f1,
+            "per_technique": metrics.per_technique,
+        }
 
     return results
 

@@ -6,9 +6,11 @@ Strategies: zero_shot, few_shot, cot, asv, consol, hybrid
 from __future__ import annotations
 
 import asyncio
+import datetime
 import json
 import logging
 import re
+import subprocess
 import time
 from pathlib import Path
 from typing import Any
@@ -79,6 +81,36 @@ def _snapshot_span(s: PredictedSpan) -> dict:
     }
 
 
+def _git_commit() -> str:
+    """Return the current git commit hash, or 'unknown' if unavailable."""
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            stderr=subprocess.DEVNULL,
+        ).decode().strip()
+    except Exception:
+        return "unknown"
+
+
+def _serialise_pass_spans(pass_results: list[list]) -> list[list[dict]]:
+    """Serialise per-pass parsed spans for storage in stage_outputs."""
+    return [
+        [
+            {
+                "technique": s.technique.value,
+                "span_text": s.span_text,
+                "start": s.start,
+                "end": s.end,
+                "pass_id": s.pass_id,
+                "reasoning": s.reasoning,
+                "resolved": s.resolved,
+            }
+            for s in pass_spans
+        ]
+        for pass_spans in pass_results
+    ]
+
+
 # ── Baseline (zero_shot, few_shot, cot) ───────────────────────────────────
 
 async def _run_baseline(
@@ -97,13 +129,16 @@ async def _run_baseline(
         user_template = ZERO_SHOT_USER
 
     user_prompt = user_template.format(text=article.text)
-    raw_output = await client.complete(
-        system_prompt=system_prompt,
-        user_prompt=user_prompt,
-        temperature=config.temperature,
-        max_tokens=config.max_tokens,
-        response_format={"type": "json_object"} if use_json_mode else None,
-    )
+
+    with client.cost_tracker.stage(f"{config.strategy}_detection"):
+        raw_output = await client.complete(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            temperature=config.temperature,
+            max_tokens=config.max_tokens,
+            response_format={"type": "json_object"} if use_json_mode else None,
+            seed=config.seed,
+        )
 
     spans, errors = parse_llm_response(raw_output, article.text, pass_id=0)
     if errors:
@@ -132,22 +167,25 @@ async def _run_asv(
     pass_results: list[list[PredictedSpan]] = []
     raw_s1_outputs: list[str] = []
 
-    for i, temp in enumerate(config.asv_temperatures[:config.asv_num_passes]):
-        raw = await client.complete(
-            system_prompt=STAGE1_SYSTEM,
-            user_prompt=user_prompt,
-            temperature=temp,
-            max_tokens=config.max_tokens,
-            response_format={"type": "json_object"},
-        )
-        raw_s1_outputs.append(raw)
-        spans, errors = parse_llm_response(raw, article.text, pass_id=i)
-        for s in spans:
-            s.stage_history.append(f"S1_pass{i}")
-        pass_results.append(spans)
-        if errors:
-            logger.warning(f"ASV S1 parse errors [{article.id}] pass {i}: {errors}")
+    with client.cost_tracker.stage("stage1_detection"):
+        for i, temp in enumerate(config.asv_temperatures[:config.asv_num_passes]):
+            raw = await client.complete(
+                system_prompt=STAGE1_SYSTEM,
+                user_prompt=user_prompt,
+                temperature=temp,
+                max_tokens=config.max_tokens,
+                response_format={"type": "json_object"},
+                seed=config.seed + i,
+            )
+            raw_s1_outputs.append(raw)
+            spans, errors = parse_llm_response(raw, article.text, pass_id=i)
+            for s in spans:
+                s.stage_history.append(f"S1_pass{i}")
+            pass_results.append(spans)
+            if errors:
+                logger.warning(f"ASV S1 parse errors [{article.id}] pass {i}: {errors}")
 
+    stage_outputs["stage1_per_pass_spans"] = _serialise_pass_spans(pass_results)
     merged = merge_multipass(pass_results, article.text)
     for s in merged:
         s.stage_history.append("S1_merged")
@@ -179,17 +217,20 @@ async def _run_asv(
         text=article.text,
         detections_json=format_detections_for_stage2(detections_for_s2),
     )
-    raw_s2 = await client.complete(
-        system_prompt=STAGE2_SYSTEM, user_prompt=s2_user,
-        temperature=0.0, max_tokens=config.max_tokens,
-        response_format={"type": "json_object"},
-        model_override=config.verify_model,
-    )
+    with client.cost_tracker.stage("stage2_critique"):
+        raw_s2 = await client.complete(
+            system_prompt=STAGE2_SYSTEM, user_prompt=s2_user,
+            temperature=0.0, max_tokens=config.max_tokens,
+            response_format={"type": "json_object"},
+            model_override=config.verify_model,
+            seed=config.seed,
+        )
     stage_outputs["stage2_raw"] = raw_s2
     stage_outputs["stage2_model"] = config.verify_model or config.model
 
     critiques = _parse_critiques(raw_s2)
     stage_outputs["stage2_critiques_count"] = len(critiques)
+    stage_outputs["stage2_critique_parsed"] = critiques
 
     logger.info(
         f"ASV S2 [{article.id}]: {len(critiques)} critiques "
@@ -203,14 +244,17 @@ async def _run_asv(
             detections_json=format_detections_for_stage3(detections_for_s2),
             critiques_json=format_critiques_for_stage3(critiques),
         )
-        raw_s3 = await client.complete(
-            system_prompt=STAGE3_SYSTEM, user_prompt=s3_user,
-            temperature=0.0, max_tokens=config.max_tokens,
-            response_format={"type": "json_object"},
-        )
+        with client.cost_tracker.stage("stage3_adjudication"):
+            raw_s3 = await client.complete(
+                system_prompt=STAGE3_SYSTEM, user_prompt=s3_user,
+                temperature=0.0, max_tokens=config.max_tokens,
+                response_format={"type": "json_object"},
+                seed=config.seed,
+            )
         stage_outputs["stage3_raw"] = raw_s3
         verdicts = _parse_verdicts(raw_s3)
         stage_outputs["stage3_verdicts_count"] = len(verdicts)
+        stage_outputs["stage3_verdicts_parsed"] = verdicts
         _apply_verdicts(merged, verdicts)
     else:
         _apply_critique_verdicts(merged, critiques)
@@ -249,20 +293,23 @@ async def _run_consol(
     pass_results: list[list[PredictedSpan]] = []
     raw_s1_outputs: list[str] = []
 
-    for i, temp in enumerate(config.asv_temperatures[:config.asv_num_passes]):
-        raw = await client.complete(
-            system_prompt=STAGE1_SYSTEM, user_prompt=user_prompt,
-            temperature=temp, max_tokens=config.max_tokens,
-            response_format={"type": "json_object"},
-        )
-        raw_s1_outputs.append(raw)
-        spans, errors = parse_llm_response(raw, article.text, pass_id=i)
-        for s in spans:
-            s.stage_history.append(f"S1_pass{i}")
-        pass_results.append(spans)
-        if errors:
-            logger.warning(f"Consol S1 parse errors [{article.id}] pass {i}: {errors}")
+    with client.cost_tracker.stage("stage1_detection"):
+        for i, temp in enumerate(config.asv_temperatures[:config.asv_num_passes]):
+            raw = await client.complete(
+                system_prompt=STAGE1_SYSTEM, user_prompt=user_prompt,
+                temperature=temp, max_tokens=config.max_tokens,
+                response_format={"type": "json_object"},
+                seed=config.seed + i,
+            )
+            raw_s1_outputs.append(raw)
+            spans, errors = parse_llm_response(raw, article.text, pass_id=i)
+            for s in spans:
+                s.stage_history.append(f"S1_pass{i}")
+            pass_results.append(spans)
+            if errors:
+                logger.warning(f"Consol S1 parse errors [{article.id}] pass {i}: {errors}")
 
+    stage_outputs["stage1_per_pass_spans"] = _serialise_pass_spans(pass_results)
     merged = merge_multipass(pass_results, article.text)
     for s in merged:
         s.stage_history.append("S1_merged")
@@ -294,17 +341,20 @@ async def _run_consol(
         text=article.text, num_passes=config.asv_num_passes,
         candidates_json=format_candidates_for_consol(candidates_for_consol),
     )
-    raw_s2 = await client.complete(
-        system_prompt=CONSOL_SYSTEM, user_prompt=consol_user,
-        temperature=0.0, max_tokens=config.max_tokens,
-        response_format={"type": "json_object"},
-        model_override=config.verify_model,
-    )
+    with client.cost_tracker.stage("stage2_consolidation"):
+        raw_s2 = await client.complete(
+            system_prompt=CONSOL_SYSTEM, user_prompt=consol_user,
+            temperature=0.0, max_tokens=config.max_tokens,
+            response_format={"type": "json_object"},
+            model_override=config.verify_model,
+            seed=config.seed,
+        )
     stage_outputs["stage2_consol_raw"] = raw_s2
     stage_outputs["stage2_model"] = config.verify_model or config.model
 
     consol_annotations = _parse_consol_output(raw_s2)
     stage_outputs["stage2_consol_count"] = len(consol_annotations)
+    stage_outputs["stage2_consol_parsed"] = consol_annotations
 
     _apply_consol_decisions(merged, consol_annotations, article.text, no_drop=False)
     stage_snapshots["after_s2"] = [_snapshot_span(s) for s in merged]
@@ -344,20 +394,23 @@ async def _run_hybrid(
     pass_results: list[list[PredictedSpan]] = []
     raw_s1_outputs: list[str] = []
 
-    for i, temp in enumerate(config.asv_temperatures[:config.asv_num_passes]):
-        raw = await client.complete(
-            system_prompt=STAGE1_SYSTEM, user_prompt=user_prompt,
-            temperature=temp, max_tokens=config.max_tokens,
-            response_format={"type": "json_object"},
-        )
-        raw_s1_outputs.append(raw)
-        spans, errors = parse_llm_response(raw, article.text, pass_id=i)
-        for s in spans:
-            s.stage_history.append(f"S1_pass{i}")
-        pass_results.append(spans)
-        if errors:
-            logger.warning(f"Hybrid S1 parse errors [{article.id}] pass {i}: {errors}")
+    with client.cost_tracker.stage("stage1_detection"):
+        for i, temp in enumerate(config.asv_temperatures[:config.asv_num_passes]):
+            raw = await client.complete(
+                system_prompt=STAGE1_SYSTEM, user_prompt=user_prompt,
+                temperature=temp, max_tokens=config.max_tokens,
+                response_format={"type": "json_object"},
+                seed=config.seed + i,
+            )
+            raw_s1_outputs.append(raw)
+            spans, errors = parse_llm_response(raw, article.text, pass_id=i)
+            for s in spans:
+                s.stage_history.append(f"S1_pass{i}")
+            pass_results.append(spans)
+            if errors:
+                logger.warning(f"Hybrid S1 parse errors [{article.id}] pass {i}: {errors}")
 
+    stage_outputs["stage1_per_pass_spans"] = _serialise_pass_spans(pass_results)
     merged = merge_multipass(pass_results, article.text)
     for s in merged:
         s.stage_history.append("S1_merged")
@@ -389,16 +442,19 @@ async def _run_hybrid(
         text=article.text,
         detections_json=format_detections_for_stage2(detections_for_s2),
     )
-    raw_s2 = await client.complete(
-        system_prompt=STAGE2_SYSTEM, user_prompt=s2_user,
-        temperature=0.0, max_tokens=config.max_tokens,
-        response_format={"type": "json_object"},
-        model_override=config.verify_model,
-    )
+    with client.cost_tracker.stage("stage2_critique"):
+        raw_s2 = await client.complete(
+            system_prompt=STAGE2_SYSTEM, user_prompt=s2_user,
+            temperature=0.0, max_tokens=config.max_tokens,
+            response_format={"type": "json_object"},
+            model_override=config.verify_model,
+            seed=config.seed,
+        )
     stage_outputs["stage2_critique_raw"] = raw_s2
     stage_outputs["stage2_model"] = config.verify_model or config.model
 
     critiques = _parse_critiques(raw_s2)
+    stage_outputs["stage2_critique_parsed"] = critiques
     _apply_critique_verdicts(merged, critiques)
     for s in merged:
         s.stage_history.append(f"S2_{s.verdict}")
@@ -428,16 +484,19 @@ async def _run_hybrid(
         text=article.text,
         candidates_json=format_candidates_for_refine(candidates_for_refine),
     )
-    raw_s3 = await client.complete(
-        system_prompt=REFINE_SYSTEM, user_prompt=refine_user,
-        temperature=0.0, max_tokens=config.max_tokens,
-        response_format={"type": "json_object"},
-        model_override=config.verify_model,
-    )
+    with client.cost_tracker.stage("stage3_refinement"):
+        raw_s3 = await client.complete(
+            system_prompt=REFINE_SYSTEM, user_prompt=refine_user,
+            temperature=0.0, max_tokens=config.max_tokens,
+            response_format={"type": "json_object"},
+            model_override=config.verify_model,
+            seed=config.seed,
+        )
     stage_outputs["stage3_refine_raw"] = raw_s3
     stage_outputs["stage3_model"] = config.verify_model or config.model
 
     refine_annotations = _parse_refine_output(raw_s3)
+    stage_outputs["stage3_refine_parsed"] = refine_annotations
     disobey_count = _apply_refinement_decisions(
         surviving, refine_annotations, article.text,
     )
@@ -814,6 +873,7 @@ async def run_experiment(config: ExperimentConfig) -> dict[str, Any]:
     if config.max_articles is not None:
         articles = articles[:config.max_articles]
     logger.info(f"Loaded {len(articles)} articles")
+    article_by_id = {a.id: a for a in articles}
 
     client = LLMClient(
         model=config.model,
@@ -860,6 +920,15 @@ async def run_experiment(config: ExperimentConfig) -> dict[str, Any]:
         "articles_processed": len(predictions),
         "predictions": {
             aid: {
+                "article_text": article_by_id[aid].text if aid in article_by_id else "",
+                "gold_spans": [
+                    {
+                        "technique": g.technique.value,
+                        "start": g.start,
+                        "end": g.end,
+                    }
+                    for g in (article_by_id[aid].gold_spans if aid in article_by_id else [])
+                ],
                 "all_spans": [
                     {
                         "technique": s.technique.value,
@@ -869,10 +938,13 @@ async def run_experiment(config: ExperimentConfig) -> dict[str, Any]:
                         "agreement_count": s.agreement_count,
                         "confidence": s.confidence,
                         "verdict": s.verdict,
+                        "pass_id": s.pass_id,
                         "original_technique": (
                             s.original_technique.value if s.original_technique else None
                         ),
                         "original_span_text": s.original_span_text,
+                        "original_start": s.original_start,
+                        "original_end": s.original_end,
                         "was_relabeled": s.was_relabeled,
                         "was_trimmed": s.was_trimmed,
                         "consol_action": s.consol_action,
@@ -887,6 +959,20 @@ async def run_experiment(config: ExperimentConfig) -> dict[str, Any]:
             }
             for aid, pred in predictions.items()
         },
+    }
+
+    results["run_metadata"] = {
+        "timestamp_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "git_commit": _git_commit(),
+        "config_hash": config.run_id(),
+        "strategy": config.strategy,
+        "model": config.model,
+        "verify_model": config.verify_model,
+        "eval_mode": config.eval_mode,
+        "seed": config.seed,
+        "asv_stages": config.asv_stages,
+        "n_articles_processed": len(predictions),
+        "n_articles_loaded": len(articles),
     }
 
     output_dir = Path("outputs/results")

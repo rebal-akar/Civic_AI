@@ -2,9 +2,8 @@
 Run all strategies and produce a comparison table.
 
 Usage:
-    python -m scripts.run_all --model gpt-4o-mini --strategies all --limit 10
-    python -m scripts.run_all --model gpt-4o --strategies hybrid \
-        --verify-model gpt-4o --eval-mode strict --limit 50
+    python -m src.run_all --model gpt-4o-mini --strategies all --max-articles 10
+    python -m src.run_all --model gpt-4o --strategies hybrid --verify-model gpt-4o --eval-mode strict --max-articles 50
 """
 import argparse
 import asyncio

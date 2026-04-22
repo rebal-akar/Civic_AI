@@ -207,8 +207,7 @@ logs/
 # uv.lock
 
 # Output directories
-output/
-results/
+
 checkpoints/
 models/
 

@@ -1,0 +1,289 @@
+Dissertation analysis output
+Strategies analysed: ['zero_shot_gpt-4o_n122_8b0e4235', 'few_shot_gpt-4o_n122_eb64bc8c', 'asv_gpt-4o_n122_787e3e57', 'consol_gpt-4o_n122_9212d422', 'hybrid_gpt-4o_n122_be8f0a71']
+
+======================================================================
+ITEM 3: Per-pass F1 isolation (consol)
+======================================================================
+
+Consol si_f1:
+  Pass 0: 0.3232
+  Pass 1: 0.3317
+  Pass 2: 0.3285
+  Merged:  0.3515
+  Merge gain over best single pass: +0.0198
+
+Consol tc_f1:
+  Pass 0: 0.1509
+  Pass 1: 0.1726
+  Pass 2: 0.1457
+  Merged:  0.1771
+  Merge gain over best single pass: +0.0044
+
+======================================================================
+ITEM 4: Stage-by-stage F1 (using SemEval official formula)
+======================================================================
+
+asv:
+  Stage             SI-F1     SI-P     SI-R    TC-F1     TC-P     TC-R
+  after_s1         0.3575   0.3190   0.4066   0.1872   0.1638   0.2183
+  after_s2         0.3354   0.3512   0.3209   0.1763   0.1947   0.1611
+
+consol:
+  Stage             SI-F1     SI-P     SI-R    TC-F1     TC-P     TC-R
+  after_s1         0.3525   0.3187   0.3943   0.1775   0.1570   0.2042
+  after_s2         0.3552   0.3231   0.3944   0.1829   0.1684   0.2003
+
+hybrid:
+  Stage             SI-F1     SI-P     SI-R    TC-F1     TC-P     TC-R
+  after_s1         0.3593   0.3182   0.4126   0.1820   0.1604   0.2102
+  after_s2         0.3339   0.3409   0.3272   0.1722   0.1881   0.1588
+  after_s3         0.3347   0.3405   0.3291   0.1753   0.1918   0.1614
+
+======================================================================
+ITEM 4b: Stage-by-stage per-technique F1 (consol)
+======================================================================
+
+  Macro F1 per stage:
+  Stage              SI-F1    TC-F1   Macro-F1
+  -------------------------------------------
+  after_s1          0.3525   0.1775     0.1280
+  after_s2          0.3552   0.1829     0.1272
+
+  Per-technique TC-F1 by stage:
+  Technique                                after_s1   after_s2    delta
+  ---------------------------------------------------------------------
+  Appeal_to_Authority                        0.0000     0.0000  +0.0000
+  Appeal_to_Fear-Prejudice                   0.2145     0.2340  +0.0195
+  Bandwagon,Reductio_ad_hitlerum             0.0000     0.0000  +0.0000
+  Black-and-White_Fallacy                    0.2173     0.1929  -0.0244
+  Causal_Oversimplification                  0.0445     0.0453  +0.0008
+  Doubt                                      0.1971     0.1933  -0.0038
+  Exaggeration,Minimisation                  0.0796     0.0970  +0.0174
+  Flag-Waving                                0.1423     0.1211  -0.0212
+  Loaded_Language                            0.1974     0.1999  +0.0025
+  Name_Calling,Labeling                      0.2604     0.2697  +0.0093
+  Repetition                                 0.0000     0.0000  +0.0000
+  Slogans                                    0.2408     0.2315  -0.0093
+  Thought-terminating_Cliches                0.0696     0.0684  -0.0012
+  Whataboutism,Straw_Men,Red_Herring         0.0000     0.0000  +0.0000
+
+======================================================================
+ITEM 5: Drop quality (consol, from saved diagnostics)
+======================================================================
+  Total dropped: 54
+  False drops (matched gold): 7
+  False drop rate: 13.0%
+  Correct drop rate: 87.0%
+  Per-technique dropped: {'Loaded_Language': 35, 'Appeal_to_Fear-Prejudice': 9, 'Exaggeration,Minimisation': 1, 'Appeal_to_Authority': 4, 'Doubt': 1, 'Slogans': 1, 'Name_Calling,Labeling': 2, 'Repetition': 1}
+  Per-technique false drops: {'Loaded_Language': 3, 'Appeal_to_Fear-Prejudice': 2, 'Doubt': 1, 'Repetition': 1}
+
+======================================================================
+ITEM 5b: Relabel quality (consol, hybrid)
+======================================================================
+
+consol:
+  Total relabels: 234
+  Improvements (was wrong, now right): 47 (20.1%)
+  Regressions (was right, now wrong): 19 (8.1%)
+  Lateral (both correct): 2
+  Lateral (both wrong): 166
+  NET IMPROVEMENT: +28 (+12.0%)
+
+  Top 10 relabel directions (by count):
+    Loaded_Language->Name_Calling,Labeling             count= 75  improved=15 regressed=10  net=+5
+    Loaded_Language->Appeal_to_Fear-Prejudice          count= 41  improved=12 regressed= 4  net=+8
+    Loaded_Language->Exaggeration,Minimisation         count= 27  improved= 2 regressed= 2  net=+0
+    Loaded_Language->Doubt                             count= 26  improved= 9 regressed= 0  net=+9
+    Name_Calling,Labeling->Loaded_Language             count= 10  improved= 1 regressed= 0  net=+1
+    Exaggeration,Minimisation->Loaded_Language         count=  7  improved= 1 regressed= 0  net=+1
+    Loaded_Language->Flag-Waving                       count=  7  improved= 1 regressed= 0  net=+1
+    Appeal_to_Fear-Prejudice->Loaded_Language          count=  5  improved= 0 regressed= 0  net=+0
+    Appeal_to_Fear-Prejudice->Doubt                    count=  4  improved= 3 regressed= 0  net=+3
+    Causal_Oversimplification->Doubt                   count=  2  improved= 0 regressed= 0  net=+0
+
+  Per-technique relabel impact:
+    Loaded_Language                  relabels=183  improv=39  regress=16  net=+23  most_common_target=Name_Calling,Labeling
+    Appeal_to_Fear-Prejudice         relabels=  9  improv= 3  regress= 0  net=+3  most_common_target=Loaded_Language
+    Exaggeration,Minimisation        relabels= 10  improv= 3  regress= 0  net=+3  most_common_target=Loaded_Language
+    Name_Calling,Labeling            relabels= 13  improv= 1  regress= 0  net=+1  most_common_target=Loaded_Language
+    Appeal_to_Authority              relabels=  1  improv= 1  regress= 0  net=+1  most_common_target=Loaded_Language
+    Causal_Oversimplification        relabels=  5  improv= 0  regress= 0  net=+0  most_common_target=Doubt
+    Repetition                       relabels=  2  improv= 0  regress= 0  net=+0  most_common_target=Causal_Oversimplification
+    Bandwagon,Reductio_ad_hitlerum   relabels=  1  improv= 0  regress= 0  net=+0  most_common_target=Exaggeration,Minimisation
+    Whataboutism,Straw_Men,Red_Herring relabels=  1  improv= 0  regress= 0  net=+0  most_common_target=Name_Calling,Labeling
+    Black-and-White_Fallacy          relabels=  3  improv= 0  regress= 1  net=-1  most_common_target=Doubt
+    Flag-Waving                      relabels=  4  improv= 0  regress= 1  net=-1  most_common_target=Appeal_to_Fear-Prejudice
+    Doubt                            relabels=  2  improv= 0  regress= 1  net=-1  most_common_target=Name_Calling,Labeling
+
+  Plot saved: outputs\dissertation_analysis\relabel_matrix_consol.png
+
+hybrid:
+  Total relabels: 24
+  Improvements (was wrong, now right): 6 (25.0%)
+  Regressions (was right, now wrong): 2 (8.3%)
+  Lateral (both correct): 0
+  Lateral (both wrong): 16
+  NET IMPROVEMENT: +4 (+16.7%)
+
+  Top 10 relabel directions (by count):
+    Loaded_Language->Name_Calling,Labeling             count=  8  improved= 3 regressed= 1  net=+2
+    Loaded_Language->Doubt                             count=  6  improved= 1 regressed= 0  net=+1
+    Loaded_Language->Slogans                           count=  6  improved= 0 regressed= 1  net=-1
+    Loaded_Language->Appeal_to_Fear-Prejudice          count=  2  improved= 1 regressed= 0  net=+1
+    Loaded_Language->Exaggeration,Minimisation         count=  1  improved= 1 regressed= 0  net=+1
+    Loaded_Language->Black-and-White_Fallacy           count=  1  improved= 0 regressed= 0  net=+0
+
+  Per-technique relabel impact:
+    Loaded_Language                  relabels= 24  improv= 6  regress= 2  net=+4  most_common_target=Name_Calling,Labeling
+
+  Plot saved: outputs\dissertation_analysis\relabel_matrix_hybrid.png
+
+======================================================================
+ITEM 6: Point-biserial correlation (agreement vs correctness)
+======================================================================
+Strategy           r_pb    p_value    n_spans
+--------------------------------------------
+asv             +0.1057     0.0000       1479
+consol          +0.1128     0.0000       2231
+hybrid          +0.1280     0.0000       1210
+
+======================================================================
+ITEM 7: Six-category error classification
+======================================================================
+
+zero_shot: 2381 events
+  correct                  141  (  5.9%)
+  missed_detection        1117  ( 46.9%)
+  false_alarm              829  ( 34.8%)
+  wrong_technique          219  (  9.2%)
+  boundary_too_broad        49  (  2.1%)
+  boundary_too_narrow       23  (  1.0%)
+  boundary_offset            3  (  0.1%)
+
+asv: 2564 events
+  correct                  156  (  6.1%)
+  missed_detection        1085  ( 42.3%)
+  false_alarm              990  ( 38.6%)
+  wrong_technique          246  (  9.6%)
+  boundary_too_broad        53  (  2.1%)
+  boundary_too_narrow       33  (  1.3%)
+  boundary_offset            1  (  0.0%)
+
+consol: 3189 events
+  correct                  203  (  6.4%)
+  missed_detection         958  ( 30.0%)
+  false_alarm             1521  ( 47.7%)
+  wrong_technique          381  ( 11.9%)
+  boundary_too_broad        74  (  2.3%)
+  boundary_too_narrow       50  (  1.6%)
+  boundary_offset            2  (  0.1%)
+
+hybrid: 2057 events
+  correct                  129  (  6.3%)
+  missed_detection         847  ( 41.2%)
+  false_alarm              836  ( 40.6%)
+  wrong_technique          180  (  8.8%)
+  boundary_too_broad        44  (  2.1%)
+  boundary_too_narrow       19  (  0.9%)
+  boundary_offset            2  (  0.1%)
+
+======================================================================
+ITEM 8: Refiner disobedience (hybrid)
+======================================================================
+  Total disobey events: 0
+  Articles with disobey: 0
+  Total articles: 94
+  Disobey rate per article: 0.0000
+
+======================================================================
+ITEM 9: Per-technique F1 across all strategies
+======================================================================
+
+  TC-F1 per technique:
+  Technique                               zero_shot   few_shot        asv     consol     hybrid
+  ---------------------------------------------------------------------------------------------
+  Loaded_Language                            0.2065     0.2006     0.2118     0.1994     0.2002
+  Name_Calling,Labeling                      0.2752     0.2508     0.2724     0.2693     0.2289
+  Repetition                                 0.0000     0.0000     0.0000     0.0000     0.0000
+  Exaggeration,Minimisation                  0.0599     0.1055     0.0387     0.0970     0.0516
+  Doubt                                      0.1202     0.1255     0.1364     0.1933     0.1034
+  Appeal_to_Fear-Prejudice                   0.1532     0.1822     0.1870     0.2340     0.1536
+  Flag-Waving                                0.0223     0.0218     0.0548     0.1211     0.0486
+  Causal_Oversimplification                  0.0334     0.0341     0.0297     0.0453     0.0334
+  Slogans                                    0.2463     0.2105     0.2979     0.2315     0.1165
+  Appeal_to_Authority                        0.0224     0.0000     0.0000     0.0000     0.0000
+  Black-and-White_Fallacy                    0.0288     0.1292     0.1753     0.1929     0.0484
+  Thought-terminating_Cliches                0.0000     0.0000     0.0818     0.0672     0.0396
+  Whataboutism,Straw_Men,Red_Herring         0.0000     0.0000     0.0000     0.0000     0.0000
+  Bandwagon,Reductio_ad_hitlerum             0.0000     0.0000     0.0000     0.0000     0.0000
+
+  Precision per technique:
+  Technique                               zero_shot   few_shot        asv     consol     hybrid
+  ---------------------------------------------------------------------------------------------
+  Loaded_Language                            0.1814     0.1765     0.1745     0.1516     0.1871
+  Name_Calling,Labeling                      0.3195     0.2807     0.2899     0.2283     0.2589
+  Repetition                                 0.0000     0.0000     0.0000     0.0000     0.0000
+  Exaggeration,Minimisation                  0.0919     0.1279     0.0526     0.0865     0.0760
+  Doubt                                      0.3112     0.2639     0.3437     0.2419     0.2925
+  Appeal_to_Fear-Prejudice                   0.2067     0.2066     0.2064     0.2059     0.2009
+  Flag-Waving                                0.1250     0.1000     0.1829     0.1886     0.0985
+  Causal_Oversimplification                  0.1012     0.1156     0.0578     0.0530     0.1012
+  Slogans                                    0.3889     0.3636     0.3824     0.2500     0.1579
+  Appeal_to_Authority                        0.0277     0.0000     0.0000     0.0000     0.0000
+  Black-and-White_Fallacy                    0.3333     0.3874     0.2973     0.3100     0.1071
+  Thought-terminating_Cliches                0.0000     0.0000     0.3241     0.1144     0.1181
+  Whataboutism,Straw_Men,Red_Herring         0.0000     0.0000     0.0000     0.0000     0.0000
+  Bandwagon,Reductio_ad_hitlerum             0.0000     0.0000     0.0000     0.0000     0.0000
+
+  Recall per technique:
+  Technique                               zero_shot   few_shot        asv     consol     hybrid
+  ---------------------------------------------------------------------------------------------
+  Loaded_Language                            0.2396     0.2324     0.2693     0.2913     0.2154
+  Name_Calling,Labeling                      0.2417     0.2267     0.2569     0.3281     0.2050
+  Repetition                                 0.0000     0.0000     0.0000     0.0000     0.0000
+  Exaggeration,Minimisation                  0.0444     0.0897     0.0307     0.1104     0.0391
+  Doubt                                      0.0745     0.0823     0.0851     0.1610     0.0628
+  Appeal_to_Fear-Prejudice                   0.1217     0.1630     0.1709     0.2709     0.1243
+  Flag-Waving                                0.0122     0.0122     0.0322     0.0892     0.0322
+  Causal_Oversimplification                  0.0200     0.0200     0.0200     0.0395     0.0200
+  Slogans                                    0.1802     0.1481     0.2440     0.2156     0.0923
+  Appeal_to_Authority                        0.0189     0.0000     0.0000     0.0000     0.0000
+  Black-and-White_Fallacy                    0.0150     0.0775     0.1243     0.1400     0.0312
+  Thought-terminating_Cliches                0.0000     0.0000     0.0468     0.0476     0.0238
+  Whataboutism,Straw_Men,Red_Herring         0.0000     0.0000     0.0000     0.0000     0.0000
+  Bandwagon,Reductio_ad_hitlerum             0.0000     0.0000     0.0000     0.0000     0.0000
+
+  Gold/Pred counts per technique:
+  Technique                                Gold pred_zero_shot pred_few_shot   pred_asv pred_consol pred_hybrid
+  ----------------------------------------------------------------------------------------------------
+  Loaded_Language                           519        873        874        991       1258        777
+  Name_Calling,Labeling                     227        205        208        242        411        207
+  Repetition                                179          3          2          6          5          5
+  Exaggeration,Minimisation                  83         40         70         54        139         47
+  Doubt                                     131         27         37         31        105         30
+  Appeal_to_Fear-Prejudice                  118         74         85         85        168         70
+  Flag-Waving                                50          8         10          7         26         13
+  Causal_Oversimplification                  50          8          7         14         24          8
+  Slogans                                    27         12         11         18         24         19
+  Appeal_to_Authority                        53          5          6          8         23         10
+  Black-and-White_Fallacy                    32          3          6         10         16          7
+  Thought-terminating_Cliches                42          1          1          6         17          8
+  Whataboutism,Straw_Men,Red_Herring          0          4          8          6         12          7
+  Bandwagon,Reductio_ad_hitlerum             32          1          0          1          3          2
+
+======================================================================
+ITEM 10: Dissertation figures
+======================================================================
+  Error distribution: outputs\dissertation_analysis\fig_error_distribution.png
+  Per-pass F1 (consol): outputs\dissertation_analysis\fig_per_pass_f1_consol.png
+    Merged gain over best single pass: SI-F1 +0.0198, TC-F1 +0.0044
+  Per-technique delta (consol): outputs\dissertation_analysis\fig_per_technique_delta_consol.png
+    4 techniques improved, 5 worsened, 4 unchanged
+  Per-pass F1 (asv): outputs\dissertation_analysis\fig_per_pass_f1_asv.png
+  Per-technique delta (asv): outputs\dissertation_analysis\fig_per_technique_delta_asv.png
+  Per-pass F1 (hybrid): outputs\dissertation_analysis\fig_per_pass_f1_hybrid.png
+  Per-technique delta (hybrid): outputs\dissertation_analysis\fig_per_technique_delta_hybrid.png
+
+======================================================================
+Analysis complete.
+======================================================================
