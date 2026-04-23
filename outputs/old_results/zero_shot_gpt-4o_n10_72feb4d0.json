@@ -1,0 +1,1357 @@
+{
+  "config": {
+    "name": "zero_shot_gpt-4o_n10",
+    "strategy": "zero_shot",
+    "model": "gpt-4o",
+    "temperature": 0.0,
+    "max_tokens": 2048,
+    "seed": 42,
+    "asv_num_passes": 3,
+    "asv_temperatures": [
+      0.5,
+      0.6,
+      0.7
+    ],
+    "asv_stages": 2,
+    "articles_dir": "data/splits/train/articles",
+    "labels_path": "data/splits/train/train-task2-TC.labels",
+    "max_articles": 10,
+    "max_cost_usd": 30.0
+  },
+  "metrics": {
+    "si_precision": 0.3102,
+    "si_recall": 0.4249,
+    "si_f1": 0.3586,
+    "tc_precision": 0.2105,
+    "tc_recall": 0.2512,
+    "tc_f1": 0.2291,
+    "f1_delta": 0.1295,
+    "macro_f1": 0.1869,
+    "per_technique": {
+      "Loaded_Language": {
+        "precision": 0.1961,
+        "recall": 0.3756,
+        "f1": 0.2577,
+        "gold_count": 17,
+        "pred_count": 44
+      },
+      "Name_Calling,Labeling": {
+        "precision": 0.3333,
+        "recall": 0.2,
+        "f1": 0.25,
+        "gold_count": 5,
+        "pred_count": 3
+      },
+      "Repetition": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "gold_count": 2,
+        "pred_count": 0
+      },
+      "Exaggeration,Minimisation": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "gold_count": 0,
+        "pred_count": 4
+      },
+      "Doubt": {
+        "precision": 0.5,
+        "recall": 0.2,
+        "f1": 0.2857,
+        "gold_count": 5,
+        "pred_count": 2
+      },
+      "Appeal_to_Fear-Prejudice": {
+        "precision": 0.2158,
+        "recall": 0.3848,
+        "f1": 0.2765,
+        "gold_count": 5,
+        "pred_count": 12
+      },
+      "Flag-Waving": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "gold_count": 2,
+        "pred_count": 2
+      },
+      "Causal_Oversimplification": {
+        "precision": 0.5,
+        "recall": 0.25,
+        "f1": 0.3333,
+        "gold_count": 4,
+        "pred_count": 2
+      },
+      "Slogans": {
+        "precision": 0.9375,
+        "recall": 0.5,
+        "f1": 0.6522,
+        "gold_count": 2,
+        "pred_count": 1
+      },
+      "Appeal_to_Authority": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "gold_count": 3,
+        "pred_count": 0
+      },
+      "Black-and-White_Fallacy": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "gold_count": 3,
+        "pred_count": 0
+      },
+      "Thought-terminating_Cliches": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "gold_count": 1,
+        "pred_count": 1
+      },
+      "Whataboutism": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "gold_count": 0,
+        "pred_count": 0
+      },
+      "Bandwagon,Reductio_ad_hitlerum": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "gold_count": 0,
+        "pred_count": 1
+      }
+    },
+    "total_gold_spans": 49,
+    "total_pred_spans": 72,
+    "total_pred_spans_raw": 72,
+    "total_articles": 10,
+    "unresolved_spans": 3
+  },
+  "cost": {
+    "total_cost_usd": 0.11098749999999999,
+    "total_input_tokens": 29331,
+    "total_output_tokens": 3766,
+    "num_calls": 10,
+    "calls": [
+      {
+        "model": "gpt-4o",
+        "input_tokens": 2629,
+        "output_tokens": 348,
+        "cost_usd": 0.0100525,
+        "timestamp": 1773957169.0765922
+      },
+      {
+        "model": "gpt-4o",
+        "input_tokens": 3448,
+        "output_tokens": 399,
+        "cost_usd": 0.012610000000000001,
+        "timestamp": 1773957177.6234674
+      },
+      {
+        "model": "gpt-4o",
+        "input_tokens": 2690,
+        "output_tokens": 357,
+        "cost_usd": 0.010295,
+        "timestamp": 1773957184.7153828
+      },
+      {
+        "model": "gpt-4o",
+        "input_tokens": 2376,
+        "output_tokens": 5,
+        "cost_usd": 0.00599,
+        "timestamp": 1773957185.8613837
+      },
+      {
+        "model": "gpt-4o",
+        "input_tokens": 2661,
+        "output_tokens": 265,
+        "cost_usd": 0.0093025,
+        "timestamp": 1773957190.1878605
+      },
+      {
+        "model": "gpt-4o",
+        "input_tokens": 4735,
+        "output_tokens": 936,
+        "cost_usd": 0.0211975,
+        "timestamp": 1773957203.4430673
+      },
+      {
+        "model": "gpt-4o",
+        "input_tokens": 2580,
+        "output_tokens": 394,
+        "cost_usd": 0.01039,
+        "timestamp": 1773957209.6025765
+      },
+      {
+        "model": "gpt-4o",
+        "input_tokens": 2640,
+        "output_tokens": 204,
+        "cost_usd": 0.00864,
+        "timestamp": 1773957214.3245134
+      },
+      {
+        "model": "gpt-4o",
+        "input_tokens": 2789,
+        "output_tokens": 437,
+        "cost_usd": 0.0113425,
+        "timestamp": 1773957220.1333673
+      },
+      {
+        "model": "gpt-4o",
+        "input_tokens": 2783,
+        "output_tokens": 421,
+        "cost_usd": 0.0111675,
+        "timestamp": 1773957228.1726449
+      }
+    ]
+  },
+  "elapsed_seconds": 65.8,
+  "articles_processed": 10,
+  "predictions": {
+    "article111111111": {
+      "all_spans": [
+        {
+          "technique": "Appeal_to_Fear-Prejudice",
+          "span_text": "the next outbreak would likely be stronger",
+          "start": 219,
+          "end": 261,
+          "reasoning": "The statement instills fear about the future outbreak being more severe without presenting evidence.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "the issue is serious",
+          "start": 416,
+          "end": 436,
+          "reasoning": "The phrase uses emotionally charged language to emphasize the gravity of the situation.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Exaggeration,Minimisation",
+          "span_text": "plague in Madagascar behaved in a very, very different way this year",
+          "start": 1037,
+          "end": 1105,
+          "reasoning": "The statement exaggerates the unusual behavior of the plague without providing specific details.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Appeal_to_Fear-Prejudice",
+          "span_text": "the danger was not over",
+          "start": 1593,
+          "end": 1616,
+          "reasoning": "The phrase suggests ongoing risk to instill fear without providing specific evidence.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Appeal_to_Fear-Prejudice",
+          "span_text": "when (the plague) comes again it starts from more stock, and the magnitude in the next transmission could be higher than the one that we saw",
+          "start": 1795,
+          "end": 1935,
+          "reasoning": "The statement instills fear about a future outbreak being more severe without presenting evidence.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Appeal_to_Fear-Prejudice",
+          "span_text": "Madagascar could be affected more, and not only that, it could even spill over into neighbouring countries and beyond",
+          "start": 1969,
+          "end": 2086,
+          "reasoning": "The statement instills fear about the potential spread of the plague to other countries without evidence.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "That's a dangerous combination",
+          "start": 2287,
+          "end": 2317,
+          "reasoning": "The phrase uses emotionally charged language to emphasize the risk without providing specific evidence.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        }
+      ],
+      "confirmed_count": 7,
+      "total_count": 7,
+      "stage_outputs": {
+        "detection": "{\"annotations\": [{\"text\": \"the next outbreak would likely be stronger\", \"type\": \"Appeal_to_Fear-Prejudice\", \"reason\": \"The statement instills fear about the future outbreak being more severe without presenting evidence.\"}, {\"text\": \"the issue is serious\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase uses emotionally charged language to emphasize the gravity of the situation.\"}, {\"text\": \"plague in Madagascar behaved in a very, very different way this year\", \"type\": \"Exaggeration,Minimisation\", \"reason\": \"The statement exaggerates the unusual behavior of the plague without providing specific details.\"}, {\"text\": \"the danger was not over\", \"type\": \"Appeal_to_Fear-Prejudice\", \"reason\": \"The phrase suggests ongoing risk to instill fear without providing specific evidence.\"}, {\"text\": \"when (the plague) comes again it starts from more stock, and the magnitude in the next transmission could be higher than the one that we saw\", \"type\": \"Appeal_to_Fear-Prejudice\", \"reason\": \"The statement instills fear about a future outbreak being more severe without presenting evidence.\"}, {\"text\": \"Madagascar could be affected more, and not only that, it could even spill over into neighbouring countries and beyond\", \"type\": \"Appeal_to_Fear-Prejudice\", \"reason\": \"The statement instills fear about the potential spread of the plague to other countries without evidence.\"}, {\"text\": \"That's a dangerous combination\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase uses emotionally charged language to emphasize the risk without providing specific evidence.\"}]}"
+      }
+    },
+    "article111111113": {
+      "all_spans": [
+        {
+          "technique": "Loaded_Language",
+          "span_text": "firestorm of outrage",
+          "start": 259,
+          "end": 279,
+          "reasoning": "The phrase 'firestorm of outrage' uses strong emotional language to describe the reaction to the acquittal.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "so-called \"sanctuary cities\"",
+          "start": 332,
+          "end": 360,
+          "reasoning": "The use of 'so-called' implies skepticism or doubt about the legitimacy of the term 'sanctuary cities.'",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Causal_Oversimplification",
+          "span_text": "pinned blame for Steinle's death on illegal immigration and insufficiently aggressive deportation policies",
+          "start": 361,
+          "end": 467,
+          "reasoning": "The text attributes Steinle's death solely to illegal immigration and deportation policies, ignoring other potential factors.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Appeal_to_Fear-Prejudice",
+          "span_text": "It is unconscionable that politicians across this country continue to endanger the lives of Americans with sanctuary policies while ignoring the harm inflicted on their constituents.",
+          "start": 3802,
+          "end": 3984,
+          "reasoning": "The statement suggests that sanctuary policies endanger American lives, instilling fear about the consequences of such policies.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Name_Calling,Labeling",
+          "span_text": "Trump frequently villainized Garcia Zarate",
+          "start": 5129,
+          "end": 5171,
+          "reasoning": "The term 'villainized' suggests that Trump labeled Garcia Zarate as a villain, which is a form of negative labeling.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "perils of \"Illegal Immigration.\"",
+          "start": 5096,
+          "end": 5128,
+          "reasoning": "The word 'perils' is emotionally charged, suggesting that illegal immigration is dangerous.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Slogans",
+          "span_text": "BUILD THE WALL!",
+          "start": 5775,
+          "end": 5790,
+          "reasoning": "This is a short, memorable, action-oriented phrase used to promote a specific policy.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "sensationalizing",
+          "start": 6292,
+          "end": 6308,
+          "reasoning": "The term 'sensationalizing' implies exaggeration and emotional manipulation.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        }
+      ],
+      "confirmed_count": 8,
+      "total_count": 8,
+      "stage_outputs": {
+        "detection": "{\"annotations\": [{\"text\": \"firestorm of outrage\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'firestorm of outrage' uses strong emotional language to describe the reaction to the acquittal.\"}, {\"text\": \"so-called \\\"sanctuary cities\\\"\", \"type\": \"Loaded_Language\", \"reason\": \"The use of 'so-called' implies skepticism or doubt about the legitimacy of the term 'sanctuary cities.'\"}, {\"text\": \"pinned blame for Steinle's death on illegal immigration and insufficiently aggressive deportation policies\", \"type\": \"Causal_Oversimplification\", \"reason\": \"The text attributes Steinle's death solely to illegal immigration and deportation policies, ignoring other potential factors.\"}, {\"text\": \"It is unconscionable that politicians across this country continue to endanger the lives of Americans with sanctuary policies while ignoring the harm inflicted on their constituents.\", \"type\": \"Appeal_to_Fear-Prejudice\", \"reason\": \"The statement suggests that sanctuary policies endanger American lives, instilling fear about the consequences of such policies.\"}, {\"text\": \"Trump frequently villainized Garcia Zarate\", \"type\": \"Name_Calling,Labeling\", \"reason\": \"The term 'villainized' suggests that Trump labeled Garcia Zarate as a villain, which is a form of negative labeling.\"}, {\"text\": \"perils of \\\"Illegal Immigration.\\\"\", \"type\": \"Loaded_Language\", \"reason\": \"The word 'perils' is emotionally charged, suggesting that illegal immigration is dangerous.\"}, {\"text\": \"BUILD THE WALL!\", \"type\": \"Slogans\", \"reason\": \"This is a short, memorable, action-oriented phrase used to promote a specific policy.\"}, {\"text\": \"sensationalizing\", \"type\": \"Loaded_Language\", \"reason\": \"The term 'sensationalizing' implies exaggeration and emotional manipulation.\"}]}"
+      }
+    },
+    "article111111115": {
+      "all_spans": [
+        {
+          "technique": "Loaded_Language",
+          "span_text": "as Democratic calls for his resignation mount",
+          "start": 151,
+          "end": 196,
+          "reasoning": "The word 'mount' implies increasing pressure and urgency, adding emotional weight to the situation.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "Franken \"aggressively stuck his tongue in my mouth\"",
+          "start": 649,
+          "end": 700,
+          "reasoning": "The word 'aggressively' carries strong negative connotations, influencing the audience's perception of the event.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "pretending to grab Tweeden's breasts as she was sleeping while clothed",
+          "start": 818,
+          "end": 888,
+          "reasoning": "The phrase 'pretending to grab' suggests inappropriate behavior, evoking a negative emotional response.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "felt badly",
+          "start": 1160,
+          "end": 1170,
+          "reasoning": "The phrase 'felt badly' conveys a sense of regret and emotional impact, influencing the audience's perception of the situation.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "Franken suggested that he and she should go to the bathroom together",
+          "start": 1339,
+          "end": 1407,
+          "reasoning": "The suggestion of going to the bathroom together implies inappropriate behavior, evoking a negative emotional response.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "Franken tried to give her a \"wet, open-mouthed kiss\"",
+          "start": 1841,
+          "end": 1893,
+          "reasoning": "The description 'wet, open-mouthed kiss' is vivid and carries strong negative connotations, influencing the audience's perception.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "\"it's my right as an entertainer.\"",
+          "start": 2188,
+          "end": 2222,
+          "reasoning": "The phrase 'it's my right as an entertainer' implies entitlement and dismisses the seriousness of the situation, evoking a negative emotional response.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        }
+      ],
+      "confirmed_count": 7,
+      "total_count": 7,
+      "stage_outputs": {
+        "detection": "{\"annotations\": [{\"text\": \"as Democratic calls for his resignation mount\", \"type\": \"Loaded_Language\", \"reason\": \"The word 'mount' implies increasing pressure and urgency, adding emotional weight to the situation.\"}, {\"text\": \"Franken \\\"aggressively stuck his tongue in my mouth\\\"\", \"type\": \"Loaded_Language\", \"reason\": \"The word 'aggressively' carries strong negative connotations, influencing the audience's perception of the event.\"}, {\"text\": \"pretending to grab Tweeden's breasts as she was sleeping while clothed\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'pretending to grab' suggests inappropriate behavior, evoking a negative emotional response.\"}, {\"text\": \"felt badly\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'felt badly' conveys a sense of regret and emotional impact, influencing the audience's perception of the situation.\"}, {\"text\": \"Franken suggested that he and she should go to the bathroom together\", \"type\": \"Loaded_Language\", \"reason\": \"The suggestion of going to the bathroom together implies inappropriate behavior, evoking a negative emotional response.\"}, {\"text\": \"Franken tried to give her a \\\"wet, open-mouthed kiss\\\"\", \"type\": \"Loaded_Language\", \"reason\": \"The description 'wet, open-mouthed kiss' is vivid and carries strong negative connotations, influencing the audience's perception.\"}, {\"text\": \"\\\"it's my right as an entertainer.\\\"\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'it's my right as an entertainer' implies entitlement and dismisses the seriousness of the situation, evoking a negative emotional response.\"}]}"
+      }
+    },
+    "article111111117": {
+      "all_spans": [],
+      "confirmed_count": 0,
+      "total_count": 0,
+      "stage_outputs": {
+        "detection": "{\"annotations\": []}"
+      }
+    },
+    "article111111121": {
+      "all_spans": [
+        {
+          "technique": "Loaded_Language",
+          "span_text": "sparked criticism against the police department",
+          "start": 879,
+          "end": 926,
+          "reasoning": "The phrase 'sparked criticism' uses emotionally charged language to emphasize the negative reaction against the police department.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "showing deferential treatment for one of their own",
+          "start": 1179,
+          "end": 1229,
+          "reasoning": "The phrase 'showing deferential treatment for one of their own' implies favoritism and bias, using emotionally charged language to criticize the police department's actions.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "repeated protests",
+          "start": 1293,
+          "end": 1310,
+          "reasoning": "The phrase 'repeated protests' uses emotionally charged language to emphasize the persistence and intensity of public dissent.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "contradictory explanations",
+          "start": 1344,
+          "end": 1370,
+          "reasoning": "The phrase 'contradictory explanations' uses emotionally charged language to suggest confusion or dishonesty in the police chief's statements.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Thought-terminating_Cliches",
+          "span_text": "That is not a risk I am willing to take",
+          "start": 1838,
+          "end": 1877,
+          "reasoning": "The phrase 'That is not a risk I am willing to take' is a stock phrase that shuts down further discussion on the decision not to fire the officer earlier.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        }
+      ],
+      "confirmed_count": 5,
+      "total_count": 5,
+      "stage_outputs": {
+        "detection": "{\"annotations\": [{\"text\": \"sparked criticism against the police department\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'sparked criticism' uses emotionally charged language to emphasize the negative reaction against the police department.\"}, {\"text\": \"showing deferential treatment for one of their own\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'showing deferential treatment for one of their own' implies favoritism and bias, using emotionally charged language to criticize the police department's actions.\"}, {\"text\": \"repeated protests\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'repeated protests' uses emotionally charged language to emphasize the persistence and intensity of public dissent.\"}, {\"text\": \"contradictory explanations\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'contradictory explanations' uses emotionally charged language to suggest confusion or dishonesty in the police chief's statements.\"}, {\"text\": \"That is not a risk I am willing to take\", \"type\": \"Thought-terminating_Cliches\", \"reason\": \"The phrase 'That is not a risk I am willing to take' is a stock phrase that shuts down further discussion on the decision not to fire the officer earlier.\"}]}"
+      }
+    },
+    "article111111132": {
+      "all_spans": [
+        {
+          "technique": "Loaded_Language",
+          "span_text": "a huge fan of the weekly Bible course",
+          "start": 145,
+          "end": 182,
+          "reasoning": "The phrase 'a huge fan' uses emotionally positive language to describe the Bible course.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "widespread support for the classes",
+          "start": 1177,
+          "end": 1211,
+          "reasoning": "The phrase 'widespread support' uses emotionally positive language to suggest strong community backing.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "stiff legal challenge",
+          "start": 1359,
+          "end": 1380,
+          "reasoning": "The phrase 'stiff legal challenge' uses emotionally charged language to emphasize the seriousness of the legal opposition.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "adamant",
+          "start": 1882,
+          "end": 1889,
+          "reasoning": "The word 'adamant' conveys a strong, unwavering position, adding emotional weight to the supporters' stance.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Flag-Waving",
+          "span_text": "Any time God\u2019s word can be proclaimed is beneficial and is a good thing",
+          "start": 2221,
+          "end": 2292,
+          "reasoning": "This statement appeals to religious group identity to justify the Bible classes.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "I don\u2019t know who it harms",
+          "start": 2528,
+          "end": 2553,
+          "reasoning": "The phrase 'I don\u2019t know who it harms' minimizes potential negative impacts of the program.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Exaggeration,Minimisation",
+          "span_text": "The kids aren\u2019t forced to be there",
+          "start": 2555,
+          "end": 2589,
+          "reasoning": "This statement minimizes the coercive aspect by emphasizing the voluntary nature of attendance.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Bandwagon,Reductio_ad_hitlerum",
+          "span_text": "the program\u2019s popularity shouldn\u2019t matter",
+          "start": 2917,
+          "end": 2958,
+          "reasoning": "The argument suggests that popularity should not influence the legality, countering a bandwagon appeal.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Exaggeration,Minimisation",
+          "span_text": "If all of the Israelites had chosen to follow the Ten Commandments, think of how safe and happy they would have been",
+          "start": 3366,
+          "end": 3482,
+          "reasoning": "This statement exaggerates the positive outcomes of following the Ten Commandments.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "Wouldn\u2019t that be so wild!",
+          "start": 3707,
+          "end": 3732,
+          "reasoning": "The phrase 'Wouldn\u2019t that be so wild!' uses emotionally charged language to engage students' imaginations.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Appeal_to_Authority",
+          "span_text": "You don\u2019t need to be reading this. You need to be reading the Bible",
+          "start": -1,
+          "end": -1,
+          "reasoning": "This statement implies that the Bible is the authoritative text that should be read over others.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "God is a big deal in Mercer County",
+          "start": 4899,
+          "end": 4933,
+          "reasoning": "The phrase 'God is a big deal' uses informal, emotionally charged language to emphasize the importance of religion in the area.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "Billboards tout the Ten Commandments or offer stern messages on abortion and eternal salvation",
+          "start": 5619,
+          "end": 5713,
+          "reasoning": "The word 'stern' conveys a strong, serious tone, adding emotional weight to the messages.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Appeal_to_Fear-Prejudice",
+          "span_text": "If you die tonight. Heaven or Hell?",
+          "start": -1,
+          "end": -1,
+          "reasoning": "This billboard message uses fear of death and the afterlife to influence behavior.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "a foundation of lies",
+          "start": 7923,
+          "end": 7943,
+          "reasoning": "The phrase 'a foundation of lies' uses strong negative language to criticize the program.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Flag-Waving",
+          "span_text": "I will pray for you and all non-believers Lynne White. God Bless!",
+          "start": -1,
+          "end": -1,
+          "reasoning": "This statement appeals to religious identity and implies a moral high ground.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Name_Calling,Labeling",
+          "span_text": "You are not a Christian",
+          "start": 8607,
+          "end": 8630,
+          "reasoning": "This statement labels Lynne White in a negative way to discredit her argument.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "a Christian is a person who strives to be more Christ like",
+          "start": 8632,
+          "end": 8690,
+          "reasoning": "This definition uses emotionally positive language to describe Christians.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Flag-Waving",
+          "span_text": "It\u2019s good to be God-fearing no matter how you approach it",
+          "start": 9002,
+          "end": 9059,
+          "reasoning": "This statement appeals to religious identity to justify the Bible classes.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "liberty of conscience is not up for a vote",
+          "start": 12045,
+          "end": 12087,
+          "reasoning": "The phrase 'liberty of conscience is not up for a vote' uses strong language to emphasize the importance of individual rights.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        }
+      ],
+      "confirmed_count": 20,
+      "total_count": 20,
+      "stage_outputs": {
+        "detection": "{\"annotations\": [{\"text\": \"a huge fan of the weekly Bible course\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'a huge fan' uses emotionally positive language to describe the Bible course.\"}, {\"text\": \"widespread support for the classes\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'widespread support' uses emotionally positive language to suggest strong community backing.\"}, {\"text\": \"stiff legal challenge\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'stiff legal challenge' uses emotionally charged language to emphasize the seriousness of the legal opposition.\"}, {\"text\": \"adamant\", \"type\": \"Loaded_Language\", \"reason\": \"The word 'adamant' conveys a strong, unwavering position, adding emotional weight to the supporters' stance.\"}, {\"text\": \"Any time God\u2019s word can be proclaimed is beneficial and is a good thing\", \"type\": \"Flag-Waving\", \"reason\": \"This statement appeals to religious group identity to justify the Bible classes.\"}, {\"text\": \"I don\u2019t know who it harms\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'I don\u2019t know who it harms' minimizes potential negative impacts of the program.\"}, {\"text\": \"The kids aren\u2019t forced to be there\", \"type\": \"Exaggeration,Minimisation\", \"reason\": \"This statement minimizes the coercive aspect by emphasizing the voluntary nature of attendance.\"}, {\"text\": \"the program\u2019s popularity shouldn\u2019t matter\", \"type\": \"Bandwagon,Reductio_ad_hitlerum\", \"reason\": \"The argument suggests that popularity should not influence the legality, countering a bandwagon appeal.\"}, {\"text\": \"If all of the Israelites had chosen to follow the Ten Commandments, think of how safe and happy they would have been\", \"type\": \"Exaggeration,Minimisation\", \"reason\": \"This statement exaggerates the positive outcomes of following the Ten Commandments.\"}, {\"text\": \"Wouldn\u2019t that be so wild!\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'Wouldn\u2019t that be so wild!' uses emotionally charged language to engage students' imaginations.\"}, {\"text\": \"You don\u2019t need to be reading this. You need to be reading the Bible\", \"type\": \"Appeal_to_Authority\", \"reason\": \"This statement implies that the Bible is the authoritative text that should be read over others.\"}, {\"text\": \"God is a big deal in Mercer County\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'God is a big deal' uses informal, emotionally charged language to emphasize the importance of religion in the area.\"}, {\"text\": \"Billboards tout the Ten Commandments or offer stern messages on abortion and eternal salvation\", \"type\": \"Loaded_Language\", \"reason\": \"The word 'stern' conveys a strong, serious tone, adding emotional weight to the messages.\"}, {\"text\": \"If you die tonight. Heaven or Hell?\", \"type\": \"Appeal_to_Fear-Prejudice\", \"reason\": \"This billboard message uses fear of death and the afterlife to influence behavior.\"}, {\"text\": \"a foundation of lies\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'a foundation of lies' uses strong negative language to criticize the program.\"}, {\"text\": \"I will pray for you and all non-believers Lynne White. God Bless!\", \"type\": \"Flag-Waving\", \"reason\": \"This statement appeals to religious identity and implies a moral high ground.\"}, {\"text\": \"You are not a Christian\", \"type\": \"Name_Calling,Labeling\", \"reason\": \"This statement labels Lynne White in a negative way to discredit her argument.\"}, {\"text\": \"a Christian is a person who strives to be more Christ like\", \"type\": \"Loaded_Language\", \"reason\": \"This definition uses emotionally positive language to describe Christians.\"}, {\"text\": \"It\u2019s good to be God-fearing no matter how you approach it\", \"type\": \"Flag-Waving\", \"reason\": \"This statement appeals to religious identity to justify the Bible classes.\"}, {\"text\": \"liberty of conscience is not up for a vote\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'liberty of conscience is not up for a vote' uses strong language to emphasize the importance of individual rights.\"}]}"
+      }
+    },
+    "article111111136": {
+      "all_spans": [
+        {
+          "technique": "Loaded_Language",
+          "span_text": "Sweden will do whatever it takes, including sending in the army, to end a wave of gang violence",
+          "start": 63,
+          "end": 158,
+          "reasoning": "The phrase 'whatever it takes' is emotionally charged, suggesting extreme measures without specifying them.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "gang violence has surged in recent years",
+          "start": 318,
+          "end": 358,
+          "reasoning": "The word 'surged' is emotionally charged, implying a rapid and alarming increase.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Appeal_to_Fear-Prejudice",
+          "span_text": "Swedes are worried that the police are unable to cope",
+          "start": 363,
+          "end": 416,
+          "reasoning": "The statement instills fear by suggesting that the police are incapable of handling the situation.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Causal_Oversimplification",
+          "span_text": "populist, opposition Sweden Democrats linking public concern about the rising crime rate to a large increase in the numbers of immigrants",
+          "start": 952,
+          "end": 1089,
+          "reasoning": "The statement simplifies the cause of rising crime rates to the increase in immigrants, ignoring other potential factors.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "I am prepared to do whatever is necessary to make sure that serious, organized crime is stamped out",
+          "start": 1155,
+          "end": 1254,
+          "reasoning": "The phrase 'whatever is necessary' is emotionally charged, suggesting a willingness to take extreme actions.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Appeal_to_Fear-Prejudice",
+          "span_text": "People are shot to death in pizza restaurants, people are killed by hand grenades they find on the street",
+          "start": 1693,
+          "end": 1798,
+          "reasoning": "The statement uses vivid and alarming scenarios to instill fear about public safety.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Name_Calling,Labeling",
+          "span_text": "This is the new Sweden; the new, exciting dynamic, multicultural paradise",
+          "start": 1874,
+          "end": 1947,
+          "reasoning": "The phrase 'new, exciting dynamic, multicultural paradise' is used sarcastically to label and criticize the current state of Sweden.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        }
+      ],
+      "confirmed_count": 7,
+      "total_count": 7,
+      "stage_outputs": {
+        "detection": "{\"annotations\": [{\"text\": \"Sweden will do whatever it takes, including sending in the army, to end a wave of gang violence\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'whatever it takes' is emotionally charged, suggesting extreme measures without specifying them.\"}, {\"text\": \"gang violence has surged in recent years\", \"type\": \"Loaded_Language\", \"reason\": \"The word 'surged' is emotionally charged, implying a rapid and alarming increase.\"}, {\"text\": \"Swedes are worried that the police are unable to cope\", \"type\": \"Appeal_to_Fear-Prejudice\", \"reason\": \"The statement instills fear by suggesting that the police are incapable of handling the situation.\"}, {\"text\": \"populist, opposition Sweden Democrats linking public concern about the rising crime rate to a large increase in the numbers of immigrants\", \"type\": \"Causal_Oversimplification\", \"reason\": \"The statement simplifies the cause of rising crime rates to the increase in immigrants, ignoring other potential factors.\"}, {\"text\": \"I am prepared to do whatever is necessary to make sure that serious, organized crime is stamped out\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'whatever is necessary' is emotionally charged, suggesting a willingness to take extreme actions.\"}, {\"text\": \"People are shot to death in pizza restaurants, people are killed by hand grenades they find on the street\", \"type\": \"Appeal_to_Fear-Prejudice\", \"reason\": \"The statement uses vivid and alarming scenarios to instill fear about public safety.\"}, {\"text\": \"This is the new Sweden; the new, exciting dynamic, multicultural paradise\", \"type\": \"Name_Calling,Labeling\", \"reason\": \"The phrase 'new, exciting dynamic, multicultural paradise' is used sarcastically to label and criticize the current state of Sweden.\"}]}"
+      }
+    },
+    "article695108099": {
+      "all_spans": [
+        {
+          "technique": "Doubt",
+          "span_text": "Why did police lie and say he checked in on Sep. 28th?",
+          "start": 1423,
+          "end": 1477,
+          "reasoning": "The question insinuates that the police are being dishonest, casting doubt on their credibility without providing evidence.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "Authorities must surely now be on the hunt for whoever Paddock dined with in order to ascertain whether this individual was involved in the plot",
+          "start": 1551,
+          "end": 1695,
+          "reasoning": "The phrase 'must surely now be on the hunt' uses emotionally charged language to imply urgency and suspicion.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Appeal_to_Fear-Prejudice",
+          "span_text": "whether or not it was the same woman who reportedly told concert-goers they were \u201cgoing to die\u201d 45 minutes before the shooting took place.",
+          "start": 1700,
+          "end": 1838,
+          "reasoning": "The mention of a woman warning concert-goers they were 'going to die' is intended to instill fear and suspicion about potential accomplices.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        }
+      ],
+      "confirmed_count": 3,
+      "total_count": 3,
+      "stage_outputs": {
+        "detection": "{\"annotations\": [{\"text\": \"Why did police lie and say he checked in on Sep. 28th?\", \"type\": \"Doubt\", \"reason\": \"The question insinuates that the police are being dishonest, casting doubt on their credibility without providing evidence.\"}, {\"text\": \"Authorities must surely now be on the hunt for whoever Paddock dined with in order to ascertain whether this individual was involved in the plot\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'must surely now be on the hunt' uses emotionally charged language to imply urgency and suspicion.\"}, {\"text\": \"whether or not it was the same woman who reportedly told concert-goers they were \u201cgoing to die\u201d 45 minutes before the shooting took place.\", \"type\": \"Appeal_to_Fear-Prejudice\", \"reason\": \"The mention of a woman warning concert-goers they were 'going to die' is intended to instill fear and suspicion about potential accomplices.\"}]}"
+      }
+    },
+    "article697444415": {
+      "all_spans": [
+        {
+          "technique": "Loaded_Language",
+          "span_text": "shocking comments",
+          "start": 522,
+          "end": 539,
+          "reasoning": "The phrase 'shocking comments' is used to evoke a strong emotional reaction from the audience.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Appeal_to_Fear-Prejudice",
+          "span_text": "FBI is actively covering this up",
+          "start": 652,
+          "end": 684,
+          "reasoning": "The statement suggests a conspiracy by a powerful organization, instilling fear and distrust without evidence.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Exaggeration,Minimisation",
+          "span_text": "100% more than one shooter",
+          "start": 726,
+          "end": 752,
+          "reasoning": "The phrase '100% more than one shooter' exaggerates certainty without providing evidence.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "bullets fly past him",
+          "start": 1006,
+          "end": 1026,
+          "reasoning": "The phrase 'bullets fly past him' is emotionally charged to create a vivid and frightening image.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "Shockingly",
+          "start": 1723,
+          "end": 1733,
+          "reasoning": "The word 'shockingly' is used to provoke an emotional response from the audience.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "pigs sitting in a corral",
+          "start": 2305,
+          "end": 2329,
+          "reasoning": "The metaphor 'pigs sitting in a corral' is used to evoke a sense of vulnerability and entrapment.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "everyone was just kinda following the sheep",
+          "start": 2367,
+          "end": 2410,
+          "reasoning": "The phrase 'following the sheep' implies mindless behavior, evoking a negative emotional response.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "huge bombshell",
+          "start": 2817,
+          "end": 2831,
+          "reasoning": "The phrase 'huge bombshell' is used to create a sense of urgency and importance.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "stunning testimony",
+          "start": 2783,
+          "end": 2801,
+          "reasoning": "The phrase 'stunning testimony' is used to evoke a strong emotional reaction from the audience.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Appeal_to_Fear-Prejudice",
+          "span_text": "we are not being told what actually happened",
+          "start": 2959,
+          "end": 3003,
+          "reasoning": "The statement suggests a cover-up, instilling fear and distrust without evidence.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        }
+      ],
+      "confirmed_count": 10,
+      "total_count": 10,
+      "stage_outputs": {
+        "detection": "{\"annotations\": [{\"text\": \"shocking comments\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'shocking comments' is used to evoke a strong emotional reaction from the audience.\"}, {\"text\": \"FBI is actively covering this up\", \"type\": \"Appeal_to_Fear-Prejudice\", \"reason\": \"The statement suggests a conspiracy by a powerful organization, instilling fear and distrust without evidence.\"}, {\"text\": \"100% more than one shooter\", \"type\": \"Exaggeration,Minimisation\", \"reason\": \"The phrase '100% more than one shooter' exaggerates certainty without providing evidence.\"}, {\"text\": \"bullets fly past him\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'bullets fly past him' is emotionally charged to create a vivid and frightening image.\"}, {\"text\": \"Shockingly\", \"type\": \"Loaded_Language\", \"reason\": \"The word 'shockingly' is used to provoke an emotional response from the audience.\"}, {\"text\": \"pigs sitting in a corral\", \"type\": \"Loaded_Language\", \"reason\": \"The metaphor 'pigs sitting in a corral' is used to evoke a sense of vulnerability and entrapment.\"}, {\"text\": \"everyone was just kinda following the sheep\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'following the sheep' implies mindless behavior, evoking a negative emotional response.\"}, {\"text\": \"huge bombshell\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'huge bombshell' is used to create a sense of urgency and importance.\"}, {\"text\": \"stunning testimony\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'stunning testimony' is used to evoke a strong emotional reaction from the audience.\"}, {\"text\": \"we are not being told what actually happened\", \"type\": \"Appeal_to_Fear-Prejudice\", \"reason\": \"The statement suggests a cover-up, instilling fear and distrust without evidence.\"}]}"
+      }
+    },
+    "article697959084": {
+      "all_spans": [
+        {
+          "technique": "Loaded_Language",
+          "span_text": "astonishing eyewitness report",
+          "start": 128,
+          "end": 157,
+          "reasoning": "The phrase 'astonishing eyewitness report' uses emotionally charged language to create intrigue and skepticism about the official story.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "supposed lone gunman",
+          "start": 466,
+          "end": 486,
+          "reasoning": "The use of 'supposed' casts doubt on the official narrative by implying that the lone gunman theory is questionable.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Appeal_to_Fear-Prejudice",
+          "span_text": "authorities have so far done everything in their power to cover-up",
+          "start": 1285,
+          "end": 1351,
+          "reasoning": "This statement suggests a conspiracy by authorities, instilling fear and distrust in the official narrative.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Appeal_to_Fear-Prejudice",
+          "span_text": "Keep in mind, this is all information that the police and the FBI has hidden from the American people.",
+          "start": 1689,
+          "end": 1791,
+          "reasoning": "The statement implies a deliberate cover-up by authorities, fostering fear and suspicion among the public.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "Amazingly",
+          "start": 2206,
+          "end": 2215,
+          "reasoning": "The word 'amazingly' is used to evoke surprise and skepticism about the official narrative.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "Slowly but surely we are starting to see the official narrative regarding the Las Vegas Massacre be completely destroyed.",
+          "start": 2647,
+          "end": 2768,
+          "reasoning": "The phrase 'completely destroyed' is emotionally charged, suggesting that the official narrative is being dismantled.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Loaded_Language",
+          "span_text": "it is strikingly obvious that authorities have lied to the American people",
+          "start": 2783,
+          "end": 2857,
+          "reasoning": "The phrase 'strikingly obvious' is used to assert a strong opinion as fact, suggesting deceit by authorities.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        },
+        {
+          "technique": "Doubt",
+          "span_text": "One can only speculate as to what the reasons for these lies actually are?",
+          "start": 2914,
+          "end": 2988,
+          "reasoning": "This statement casts doubt on the motives of authorities, suggesting they are lying without providing evidence.",
+          "agreement_count": 1,
+          "confidence": -1.0,
+          "verdict": "",
+          "critique_substitution_test": "",
+          "critique_innocent_explanation": "",
+          "critique_weakness": "",
+          "critique_verdict": ""
+        }
+      ],
+      "confirmed_count": 8,
+      "total_count": 8,
+      "stage_outputs": {
+        "detection": "{\"annotations\": [\n  {\"text\": \"astonishing eyewitness report\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'astonishing eyewitness report' uses emotionally charged language to create intrigue and skepticism about the official story.\"},\n  {\"text\": \"supposed lone gunman\", \"type\": \"Loaded_Language\", \"reason\": \"The use of 'supposed' casts doubt on the official narrative by implying that the lone gunman theory is questionable.\"},\n  {\"text\": \"authorities have so far done everything in their power to cover-up\", \"type\": \"Appeal_to_Fear-Prejudice\", \"reason\": \"This statement suggests a conspiracy by authorities, instilling fear and distrust in the official narrative.\"},\n  {\"text\": \"Keep in mind, this is all information that the police and the FBI has hidden from the American people.\", \"type\": \"Appeal_to_Fear-Prejudice\", \"reason\": \"The statement implies a deliberate cover-up by authorities, fostering fear and suspicion among the public.\"},\n  {\"text\": \"Amazingly\", \"type\": \"Loaded_Language\", \"reason\": \"The word 'amazingly' is used to evoke surprise and skepticism about the official narrative.\"},\n  {\"text\": \"Slowly but surely we are starting to see the official narrative regarding the Las Vegas Massacre be completely destroyed.\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'completely destroyed' is emotionally charged, suggesting that the official narrative is being dismantled.\"},\n  {\"text\": \"it is strikingly obvious that authorities have lied to the American people\", \"type\": \"Loaded_Language\", \"reason\": \"The phrase 'strikingly obvious' is used to assert a strong opinion as fact, suggesting deceit by authorities.\"},\n  {\"text\": \"One can only speculate as to what the reasons for these lies actually are?\", \"type\": \"Doubt\", \"reason\": \"This statement casts doubt on the motives of authorities, suggesting they are lying without providing evidence.\"}\n]}"
+      }
+    }
+  }
+}

@@ -1,0 +1,200 @@
+Recomputed dissertation analysis (items 3-8)
+Strategies analysed: ['zero_shot_gpt-4o_n122_8b0e4235', 'few_shot_gpt-4o_n122_eb64bc8c', 'asv_gpt-4o_n122_787e3e57', 'consol_gpt-4o_n122_9212d422', 'hybrid_gpt-4o_n122_be8f0a71']
+
+======================================================================
+ITEM 3: Per-pass F1 isolation (consol)
+======================================================================
+
+Consol si_f1:
+  Pass 0: 0.3241
+  Pass 1: 0.3328
+  Pass 2: 0.3290
+  Merged:  0.3532
+  Merge gain over best single pass: +0.0204
+
+Consol tc_f1:
+  Pass 0: 0.1495
+  Pass 1: 0.1703
+  Pass 2: 0.1445
+  Merged:  0.1763
+  Merge gain over best single pass: +0.0060
+
+======================================================================
+ITEM 4: Stage-by-stage F1 (using SemEval official formula)
+======================================================================
+
+asv:
+  Stage             SI-F1     SI-P     SI-R    TC-F1     TC-P     TC-R
+  after_s1         0.3591   0.3224   0.4052   0.1863   0.1646   0.2145
+  after_s2         0.3357   0.3542   0.3189   0.1747   0.1954   0.1580
+
+consol:
+  Stage             SI-F1     SI-P     SI-R    TC-F1     TC-P     TC-R
+  after_s1         0.3541   0.3220   0.3933   0.1768   0.1579   0.2008
+  after_s2         0.3568   0.3264   0.3934   0.1821   0.1693   0.1970
+
+hybrid:
+  Stage             SI-F1     SI-P     SI-R    TC-F1     TC-P     TC-R
+  after_s1         0.3626   0.3226   0.4140   0.1819   0.1616   0.2081
+  after_s2         0.3369   0.3454   0.3288   0.1724   0.1900   0.1578
+  after_s3         0.3377   0.3450   0.3307   0.1754   0.1938   0.1603
+
+======================================================================
+ITEM 4b: Stage-by-stage per-technique F1 (consol)
+======================================================================
+
+  Macro F1 per stage:
+  Stage              SI-F1    TC-F1   Macro-F1
+  -------------------------------------------
+  after_s1          0.3541   0.1768     0.1250
+  after_s2          0.3568   0.1821     0.1240
+
+  Per-technique TC-F1 by stage:
+  Technique                                after_s1   after_s2    delta
+  ---------------------------------------------------------------------
+  Appeal_to_Authority                        0.0000     0.0000  +0.0000
+  Appeal_to_Fear-Prejudice                   0.2145     0.2340  +0.0195
+  Bandwagon,Reductio_ad_hitlerum             0.0000     0.0000  +0.0000
+  Black-and-White_Fallacy                    0.2173     0.1929  -0.0244
+  Causal_Oversimplification                  0.0445     0.0453  +0.0008
+  Doubt                                      0.1971     0.1933  -0.0038
+  Exaggeration,Minimisation                  0.0796     0.0970  +0.0174
+  Flag-Waving                                0.1423     0.1211  -0.0212
+  Loaded_Language                            0.1974     0.1999  +0.0025
+  Name_Calling,Labeling                      0.2604     0.2697  +0.0093
+  Repetition                                 0.0000     0.0000  +0.0000
+  Slogans                                    0.2408     0.2315  -0.0093
+  Thought-terminating_Cliches                0.0696     0.0684  -0.0012
+  Whataboutism,Straw_Men,Red_Herring         0.0870     0.0833  -0.0037
+
+======================================================================
+ITEM 5: Drop quality (consol, from recomputed diagnostics)
+======================================================================
+  Total dropped: 54
+  False drops (matched gold): 7
+  False drop rate: 13.0%
+  Correct drop rate: 87.0%
+  Per-technique dropped: {'Loaded_Language': 35, 'Appeal_to_Fear-Prejudice': 9, 'Exaggeration,Minimisation': 1, 'Appeal_to_Authority': 4, 'Doubt': 1, 'Slogans': 1, 'Name_Calling,Labeling': 2, 'Repetition': 1}
+  Per-technique false drops: {'Loaded_Language': 3, 'Appeal_to_Fear-Prejudice': 2, 'Doubt': 1, 'Repetition': 1}
+
+======================================================================
+ITEM 5b: Relabel quality (consol, hybrid)
+======================================================================
+
+consol:
+  Total relabels: 234
+  Improvements (was wrong, now right): 47 (20.1%)
+  Regressions (was right, now wrong): 19 (8.1%)
+  Lateral (both correct): 2
+  Lateral (both wrong): 166
+  NET IMPROVEMENT: +28 (+12.0%)
+
+  Top 10 relabel directions (by count):
+    Loaded_Language->Name_Calling,Labeling             count= 75  improved=15 regressed=10  net=+5
+    Loaded_Language->Appeal_to_Fear-Prejudice          count= 41  improved=12 regressed= 4  net=+8
+    Loaded_Language->Exaggeration,Minimisation         count= 27  improved= 2 regressed= 2  net=+0
+    Loaded_Language->Doubt                             count= 26  improved= 9 regressed= 0  net=+9
+    Name_Calling,Labeling->Loaded_Language             count= 10  improved= 1 regressed= 0  net=+1
+    Exaggeration,Minimisation->Loaded_Language         count=  7  improved= 1 regressed= 0  net=+1
+    Loaded_Language->Flag-Waving                       count=  7  improved= 1 regressed= 0  net=+1
+    Appeal_to_Fear-Prejudice->Loaded_Language          count=  5  improved= 0 regressed= 0  net=+0
+    Appeal_to_Fear-Prejudice->Doubt                    count=  4  improved= 3 regressed= 0  net=+3
+    Causal_Oversimplification->Doubt                   count=  2  improved= 0 regressed= 0  net=+0
+
+  Per-technique relabel impact:
+    Loaded_Language                  relabels=183  improv=39  regress=16  net=+23  most_common_target=Name_Calling,Labeling
+    Appeal_to_Fear-Prejudice         relabels=  9  improv= 3  regress= 0  net=+3  most_common_target=Loaded_Language
+    Exaggeration,Minimisation        relabels= 10  improv= 3  regress= 0  net=+3  most_common_target=Loaded_Language
+    Name_Calling,Labeling            relabels= 13  improv= 1  regress= 0  net=+1  most_common_target=Loaded_Language
+    Appeal_to_Authority              relabels=  1  improv= 1  regress= 0  net=+1  most_common_target=Loaded_Language
+    Causal_Oversimplification        relabels=  5  improv= 0  regress= 0  net=+0  most_common_target=Doubt
+    Repetition                       relabels=  2  improv= 0  regress= 0  net=+0  most_common_target=Causal_Oversimplification
+    Bandwagon,Reductio_ad_hitlerum   relabels=  1  improv= 0  regress= 0  net=+0  most_common_target=Exaggeration,Minimisation
+    Whataboutism,Straw_Men,Red_Herring relabels=  1  improv= 0  regress= 0  net=+0  most_common_target=Name_Calling,Labeling
+    Black-and-White_Fallacy          relabels=  3  improv= 0  regress= 1  net=-1  most_common_target=Doubt
+    Flag-Waving                      relabels=  4  improv= 0  regress= 1  net=-1  most_common_target=Appeal_to_Fear-Prejudice
+    Doubt                            relabels=  2  improv= 0  regress= 1  net=-1  most_common_target=Name_Calling,Labeling
+
+  Plot saved: outputs\dissertation_analysis\relabel_matrix_consol_rescored.png
+
+hybrid:
+  Total relabels: 24
+  Improvements (was wrong, now right): 6 (25.0%)
+  Regressions (was right, now wrong): 2 (8.3%)
+  Lateral (both correct): 0
+  Lateral (both wrong): 16
+  NET IMPROVEMENT: +4 (+16.7%)
+
+  Top 10 relabel directions (by count):
+    Loaded_Language->Name_Calling,Labeling             count=  8  improved= 3 regressed= 1  net=+2
+    Loaded_Language->Doubt                             count=  6  improved= 1 regressed= 0  net=+1
+    Loaded_Language->Slogans                           count=  6  improved= 0 regressed= 1  net=-1
+    Loaded_Language->Appeal_to_Fear-Prejudice          count=  2  improved= 1 regressed= 0  net=+1
+    Loaded_Language->Exaggeration,Minimisation         count=  1  improved= 1 regressed= 0  net=+1
+    Loaded_Language->Black-and-White_Fallacy           count=  1  improved= 0 regressed= 0  net=+0
+
+  Per-technique relabel impact:
+    Loaded_Language                  relabels= 24  improv= 6  regress= 2  net=+4  most_common_target=Name_Calling,Labeling
+
+  Plot saved: outputs\dissertation_analysis\relabel_matrix_hybrid_rescored.png
+
+======================================================================
+ITEM 6: Point-biserial correlation (agreement vs correctness)
+======================================================================
+Strategy           r_pb    p_value    n_spans
+--------------------------------------------
+asv             +0.1052     0.0000       1479
+consol          +0.1103     0.0000       2231
+hybrid          +0.1320     0.0000       1210
+
+======================================================================
+ITEM 7: Six-category error classification
+======================================================================
+
+zero_shot: 2414 events
+  correct                  142  (  5.9%)
+  missed_detection        1150  ( 47.6%)
+  false_alarm              826  ( 34.2%)
+  wrong_technique          221  (  9.2%)
+  boundary_too_broad        49  (  2.0%)
+  boundary_too_narrow       23  (  1.0%)
+  boundary_offset            3  (  0.1%)
+
+asv: 2596 events
+  correct                  157  (  6.0%)
+  missed_detection        1117  ( 43.0%)
+  false_alarm              985  ( 37.9%)
+  wrong_technique          250  (  9.6%)
+  boundary_too_broad        53  (  2.0%)
+  boundary_too_narrow       33  (  1.3%)
+  boundary_offset            1  (  0.0%)
+
+consol: 3220 events
+  correct                  205  (  6.4%)
+  missed_detection         989  ( 30.7%)
+  false_alarm             1516  ( 47.1%)
+  wrong_technique          384  ( 11.9%)
+  boundary_too_broad        74  (  2.3%)
+  boundary_too_narrow       50  (  1.6%)
+  boundary_offset            2  (  0.1%)
+
+hybrid: 2078 events
+  correct                  129  (  6.2%)
+  missed_detection         868  ( 41.8%)
+  false_alarm              831  ( 40.0%)
+  wrong_technique          182  (  8.8%)
+  boundary_too_broad        46  (  2.2%)
+  boundary_too_narrow       20  (  1.0%)
+  boundary_offset            2  (  0.1%)
+
+======================================================================
+ITEM 8: Refiner disobedience (hybrid)
+======================================================================
+  Total disobey events: 0
+  Articles with disobey: 0
+  Total articles: 94
+  Disobey rate per article: 0.0000
+
+======================================================================
+Recomputation complete.
+======================================================================
