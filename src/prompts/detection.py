@@ -230,31 +230,6 @@ For each span, classify it using exactly one of the 14 technique labels defined 
 
 STAGE1_USER = ZERO_SHOT_USER  # Same user template
 
-# ─── CoT Prompt ───────────────────────────────────────────────────────────────
-
-COT_SYSTEM = """You are an expert annotator trained in identifying propaganda techniques in news articles, following the SemEval-2020 Task 11 annotation guidelines.
-
-Your task is to read the article carefully and identify ALL text spans that employ propaganda techniques.
-
-Think step by step:
-1. Read through the article paragraph by paragraph.
-2. For each paragraph, identify any phrases or sentences that use propaganda techniques.
-3. For each candidate span, check it against the technique definitions below.
-4. Use the disambiguation priority list to resolve ambiguous cases.
-5. After your analysis, output the final JSON with your annotations.
-
-Output your step-by-step reasoning FIRST, then the JSON object at the END of your response.
-
-""" + TECHNIQUE_GUIDELINES + OUTPUT_FORMAT
-
-COT_USER = """Read the following article step by step and identify all propaganda technique spans. First explain your reasoning, then output the JSON.
-
-ARTICLE:
-\"\"\"
-{text}
-\"\"\"
-"""
-
 # ─── Few-Shot Prompt ──────────────────────────────────────────────────────────
 # Examples drawn from SemEval-2020 Task 11 training data (Table 1 of the paper).
 # Selected to cover a mix of common and rare techniques, plus a clean example.

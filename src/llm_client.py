@@ -1,15 +1,7 @@
-"""
-LLM client with caching, cost tracking, retry logic, and cross-provider support.
+"""Multi-provider LLM client with disk caching, cost tracking, and retries.
 
-Wraps OpenAI and Anthropic APIs behind a single interface. All calls are
-cached to disk so re-running experiments is free after the first pass.
-
-Provider routing is by model name:
-- gpt-* / o1-*       -> OpenAI
-- claude-*           -> Anthropic
-
-Both providers share the same cache, cost tracker, stage tracker, and
-retry policy. The complete() interface is identical regardless of provider.
+Routes to OpenAI or Anthropic based on model name prefix (gpt-* / claude-*).
+The complete() interface is identical regardless of provider.
 """
 from __future__ import annotations
 
@@ -34,7 +26,6 @@ try:
         APITimeoutError as AnthropicAPITimeoutError,
         RateLimitError as AnthropicRateLimitError,
     )
-
     _ANTHROPIC_AVAILABLE = True
 except ImportError:
     _ANTHROPIC_AVAILABLE = False
@@ -50,51 +41,23 @@ load_dotenv()
 if not os.environ.get("ANTHROPIC_API_KEY") and os.environ.get("CLAUDE_API_KEY"):
     os.environ["ANTHROPIC_API_KEY"] = os.environ["CLAUDE_API_KEY"]
 
-# ── Pricing (USD per 1K tokens) ──────────────────────────────────────────────
+# USD per 1K tokens (input, output). Verify against provider pricing pages.
 PRICING: dict[str, tuple[float, float]] = {
-    # OpenAI
     "gpt-4o": (0.0025, 0.01),
     "gpt-4o-mini": (0.00015, 0.0006),
-    "gpt-4o-2024-11-20": (0.0025, 0.01),
-    "gpt-4o-mini-2024-07-18": (0.00015, 0.0006),
-    # Anthropic — verify against https://www.anthropic.com/pricing
     "claude-sonnet-4-6": (0.003, 0.015),
-    "claude-sonnet-4-5": (0.003, 0.015),
-    "claude-3-5-sonnet-latest": (0.003, 0.015),
-    "claude-3-5-sonnet-20241022": (0.003, 0.015),
-    "claude-opus-4-6": (0.015, 0.075),
-    "claude-haiku-4-5-20251001": (0.0008, 0.004),
-    # DeepSeek (requires base_url override; not wired)
-    "deepseek-chat": (0.00028, 0.00042),
-    "deepseek-reasoner": (0.00055, 0.00219),
-    # Groq (requires base_url override)
-    "llama-3.3-70b-versatile": (0.00059, 0.00079),
-    "qwen-qwq-32b": (0.00029, 0.00039),
 }
 
 
 def _provider_for(model: str) -> str:
-    """Return 'openai' or 'anthropic' based on the model name prefix."""
     if model.startswith("claude"):
         return "anthropic"
-    if model.startswith("gpt") or model.startswith("o1"):
-        return "openai"
     return "openai"
 
 
 @dataclass
 class CostTracker:
-    """Tracks cumulative API costs across an experiment.
-
-    Provides three breakdowns:
-    - Total: total_cost_usd, total_input_tokens, total_output_tokens
-    - Per-model: by_model[model] = {input, output, cost, calls}
-    - Per-stage: by_stage[stage_name] = {input, output, cost, calls}
-
-    Per-stage tracking uses the `stage()` context manager. Wrap each pipeline
-    stage in a `with tracker.stage("stage_name"):` block, and any API calls
-    made inside that block are attributed to that stage.
-    """
+    """Tracks API cost, tokens, and calls. Supports per-stage attribution via stage()."""
 
     calls: list[dict] = field(default_factory=list)
     total_input_tokens: int = 0
@@ -132,21 +95,12 @@ class CostTracker:
         self.total_output_tokens += output_tokens
         self.total_cost_usd += cost
 
-        mb = self.by_model.setdefault(
-            model, {"input": 0, "output": 0, "cost": 0.0, "calls": 0}
-        )
-        mb["input"] += input_tokens
-        mb["output"] += output_tokens
-        mb["cost"] += cost
-        mb["calls"] += 1
-
-        sb = self.by_stage.setdefault(
-            stage, {"input": 0, "output": 0, "cost": 0.0, "calls": 0}
-        )
-        sb["input"] += input_tokens
-        sb["output"] += output_tokens
-        sb["cost"] += cost
-        sb["calls"] += 1
+        for bucket, key in ((self.by_model, model), (self.by_stage, stage)):
+            b = bucket.setdefault(key, {"input": 0, "output": 0, "cost": 0.0, "calls": 0})
+            b["input"] += input_tokens
+            b["output"] += output_tokens
+            b["cost"] += cost
+            b["calls"] += 1
 
         return cost
 
@@ -170,19 +124,7 @@ class CostTracker:
 
 
 class LLMClient:
-    """Multi-provider LLM client with disk caching, cost tracking, and retries.
-
-    Routes to OpenAI or Anthropic based on model name. The complete() method
-    has identical semantics across providers — caller code does not need to
-    know which provider is being used.
-
-    Usage:
-        client = LLMClient(model="gpt-4o")
-        text = await client.complete(system_prompt, user_prompt)
-
-        # Cross-provider override on a single call:
-        text = await client.complete(..., model_override="claude-sonnet-4-6")
-    """
+    """Async LLM client with disk caching, cost tracking, and exponential-backoff retries."""
 
     def __init__(
         self,
@@ -197,16 +139,15 @@ class LLMClient:
         self.cost_tracker = CostTracker()
 
         self._openai = AsyncOpenAI()
-
         self._anthropic: Any = None
+
         anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
         if _ANTHROPIC_AVAILABLE and anthropic_key:
             self._anthropic = AsyncAnthropic(api_key=anthropic_key)
         elif _provider_for(model) == "anthropic":
             raise RuntimeError(
-                "Anthropic model requested but the anthropic package is missing "
-                "or ANTHROPIC_API_KEY / CLAUDE_API_KEY is not set. "
-                "Run: uv add anthropic, and add a key to your .env"
+                "Anthropic model requested but anthropic package is missing "
+                "or ANTHROPIC_API_KEY / CLAUDE_API_KEY is not set."
             )
 
     async def complete(
@@ -219,18 +160,6 @@ class LLMClient:
         model_override: str | None = None,
         seed: int | None = None,
     ) -> str:
-        """Send a completion request, returning the response text.
-
-        Behaviour is identical across providers from the caller's perspective.
-        Cache hits short-circuit before any API call.
-
-        Args:
-            response_format: For OpenAI, passed through (e.g. {"type": "json_object"}).
-                For Anthropic, {"type": "json_object"} triggers prefill-based JSON
-                forcing; the returned text is normalised to start with "{".
-            model_override: If set, use this model instead of self.model.
-            seed: For OpenAI only; ignored by Anthropic.
-        """
         active_model = model_override or self.model
         provider = _provider_for(active_model)
 
@@ -240,7 +169,6 @@ class LLMClient:
         )
         cached = self._cache_get(cache_key)
         if cached is not None:
-            logger.debug(f"Cache hit ({provider}): {cache_key[:12]}")
             return cached
 
         if self.cost_tracker.total_cost_usd >= self.max_cost_usd:
@@ -262,13 +190,7 @@ class LLMClient:
         else:
             raise RuntimeError(f"Unknown provider for model {active_model!r}")
 
-        cost = self.cost_tracker.record(active_model, in_toks, out_toks)
-        logger.debug(
-            f"API call ({active_model}, {provider}): "
-            f"{in_toks}in/{out_toks}out (${cost:.4f}, "
-            f"total: {self.cost_tracker.summary()})"
-        )
-
+        self.cost_tracker.record(active_model, in_toks, out_toks)
         self._cache_set(cache_key, text, active_model)
         return text
 
@@ -282,7 +204,6 @@ class LLMClient:
         response_format: dict | None,
         seed: int | None,
     ) -> tuple[str, int, int]:
-        """OpenAI chat completion with retry. Returns (text, input_tokens, output_tokens)."""
         kwargs: dict[str, Any] = {
             "model": model,
             "messages": [
@@ -297,33 +218,16 @@ class LLMClient:
         if seed is not None:
             kwargs["seed"] = seed
 
-        max_retries = 10
-        base_delay = 2.0
-        max_delay = 120.0
-
-        for attempt in range(1, max_retries + 1):
-            try:
-                response = await self._openai.chat.completions.create(**kwargs)
-                break
-            except (RateLimitError, APITimeoutError, APIConnectionError) as e:
-                if attempt == max_retries:
-                    logger.error(f"OpenAI call failed after {max_retries} retries: {e}")
-                    raise
-                delay = min(base_delay * (2 ** (attempt - 1)), max_delay)
-                logger.warning(
-                    f"OpenAI retryable error (attempt {attempt}/{max_retries}, "
-                    f"{model}): {e}. Waiting {delay:.0f}s..."
-                )
-                await asyncio.sleep(delay)
-            except Exception as e:
-                logger.error(f"OpenAI call failed (non-retryable, {model}): {e}")
-                raise
+        response = await self._retry(
+            lambda: self._openai.chat.completions.create(**kwargs),
+            provider="OpenAI",
+            model=model,
+            retryable=(RateLimitError, APITimeoutError, APIConnectionError),
+        )
 
         text = response.choices[0].message.content or ""
         usage = response.usage
-        in_toks = usage.prompt_tokens if usage else 0
-        out_toks = usage.completion_tokens if usage else 0
-        return text, in_toks, out_toks
+        return text, usage.prompt_tokens if usage else 0, usage.completion_tokens if usage else 0
 
     async def _call_anthropic(
         self,
@@ -334,23 +238,15 @@ class LLMClient:
         max_tokens: int,
         response_format: dict | None,
     ) -> tuple[str, int, int]:
-        """Anthropic Messages API with retry and tool-use JSON forcing.
+        """Claude 4 dropped prefill support for JSON, so we use a forced tool call.
 
-        JSON forcing on Claude 4 (which dropped prefill support):
-        when response_format is {"type": "json_object"}, we define a
-        pseudo-tool ``emit_json`` whose input schema is open-ended (any
-        object), and force the model to call it via tool_choice.  Anthropic
-        guarantees the tool_use.input field is a valid object matching the
-        schema.
-
-        We re-serialise that dict back to a JSON string so the existing
-        parser (which expects raw JSON text) does not need to change.
+        When response_format is {"type": "json_object"}, we declare a pseudo-tool
+        `emit_json` with an open-ended schema and force the model to call it.
+        The returned tool_use.input is serialised back to a JSON string so the
+        parser (which expects raw JSON text) works unchanged.
         """
         if self._anthropic is None:
-            raise RuntimeError(
-                "Anthropic client not initialised. Install `anthropic` and "
-                "set ANTHROPIC_API_KEY or CLAUDE_API_KEY in your environment."
-            )
+            raise RuntimeError("Anthropic client not initialised.")
 
         force_json = (
             response_format is not None
@@ -366,53 +262,26 @@ class LLMClient:
         }
 
         if force_json:
-            kwargs["tools"] = [
-                {
-                    "name": "emit_json",
-                    "description": (
-                        "Emit the structured JSON response for this task. "
-                        "The input object should match the schema described "
-                        "in the system prompt."
-                    ),
-                    "input_schema": {
-                        "type": "object",
-                        "additionalProperties": True,
-                    },
-                }
-            ]
+            kwargs["tools"] = [{
+                "name": "emit_json",
+                "description": "Emit the structured JSON response for this task.",
+                "input_schema": {"type": "object", "additionalProperties": True},
+            }]
             kwargs["tool_choice"] = {"type": "tool", "name": "emit_json"}
 
-        max_retries = 10
-        base_delay = 2.0
-        max_delay = 120.0
-
-        for attempt in range(1, max_retries + 1):
-            try:
-                response = await self._anthropic.messages.create(**kwargs)
-                break
-            except (
+        response = await self._retry(
+            lambda: self._anthropic.messages.create(**kwargs),
+            provider="Anthropic",
+            model=model,
+            retryable=(
                 AnthropicRateLimitError,
                 AnthropicAPITimeoutError,
                 AnthropicAPIConnectionError,
-            ) as e:
-                if attempt == max_retries:
-                    logger.error(
-                        f"Anthropic call failed after {max_retries} retries: {e}"
-                    )
-                    raise
-                delay = min(base_delay * (2 ** (attempt - 1)), max_delay)
-                logger.warning(
-                    f"Anthropic retryable error (attempt {attempt}/{max_retries}, "
-                    f"{model}): {e}. Waiting {delay:.0f}s..."
-                )
-                await asyncio.sleep(delay)
-            except Exception as e:
-                logger.error(f"Anthropic call failed (non-retryable, {model}): {e}")
-                raise
+            ),
+        )
 
         text_parts: list[str] = []
         tool_use_dict: dict | None = None
-
         for block in response.content:
             block_type = getattr(block, "type", None)
             if block_type == "tool_use" and getattr(block, "name", "") == "emit_json":
@@ -421,26 +290,37 @@ class LLMClient:
                 text_parts.append(block.text)
 
         if force_json:
-            if tool_use_dict is None:
-                if text_parts:
-                    logger.warning(
-                        f"Anthropic ({model}): tool_choice=emit_json was set but "
-                        f"no tool_use block returned. Falling back to text content."
-                    )
-                    text = "".join(text_parts)
-                else:
-                    raise RuntimeError(
-                        f"Anthropic ({model}) returned neither tool_use nor text "
-                        f"despite force_json=True. Response: {response}"
-                    )
-            else:
+            if tool_use_dict is not None:
                 text = json.dumps(tool_use_dict, ensure_ascii=False)
+            elif text_parts:
+                logger.warning(f"Anthropic ({model}): no tool_use block, falling back to text.")
+                text = "".join(text_parts)
+            else:
+                raise RuntimeError(f"Anthropic ({model}) returned no content.")
         else:
             text = "".join(text_parts)
 
-        in_toks = response.usage.input_tokens
-        out_toks = response.usage.output_tokens
-        return text, in_toks, out_toks
+        return text, response.usage.input_tokens, response.usage.output_tokens
+
+    async def _retry(self, call, provider: str, model: str, retryable: tuple):
+        """Exponential-backoff retry wrapper; 10 attempts, 2s–120s delay."""
+        base_delay, max_delay, max_retries = 2.0, 120.0, 10
+        for attempt in range(1, max_retries + 1):
+            try:
+                return await call()
+            except retryable as e:
+                if attempt == max_retries:
+                    logger.error(f"{provider} call failed after {max_retries} retries: {e}")
+                    raise
+                delay = min(base_delay * (2 ** (attempt - 1)), max_delay)
+                logger.warning(
+                    f"{provider} retryable error (attempt {attempt}/{max_retries}, "
+                    f"{model}): {e}. Waiting {delay:.0f}s..."
+                )
+                await asyncio.sleep(delay)
+            except Exception as e:
+                logger.error(f"{provider} call failed (non-retryable, {model}): {e}")
+                raise
 
     def _cache_key(
         self,
@@ -450,7 +330,7 @@ class LLMClient:
         max_tokens: int,
         response_format: dict | None,
         model: str,
-        seed: int | None = None,
+        seed: int | None,
     ) -> str:
         raw = json.dumps({
             "model": model,
@@ -466,8 +346,7 @@ class LLMClient:
     def _cache_get(self, key: str) -> str | None:
         path = self.cache_dir / f"{key}.json"
         if path.exists():
-            data = json.loads(path.read_text())
-            return data.get("response")
+            return json.loads(path.read_text()).get("response")
         return None
 
     def _cache_set(self, key: str, response: str, model: str) -> None:

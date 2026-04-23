@@ -21,7 +21,7 @@ Research grounding:
   refinement pass that polishes what Stage 2 kept, not a second filter.
 """
 
-from src.prompts.baseline import TECHNIQUE_GUIDELINES
+from src.prompts.detection import TECHNIQUE_GUIDELINES
 
 REFINE_SYSTEM = """You are an expert annotation refiner for propaganda detection, trained on the SemEval-2020 Task 11 guidelines.
 

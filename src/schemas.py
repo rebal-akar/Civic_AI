@@ -1,7 +1,4 @@
-"""
-Core data models for span-level propaganda detection.
-SemEval-2020 Task 11 taxonomy (14 techniques), spans, predictions, config.
-"""
+"""Core data models: SemEval-2020 Task 11 taxonomy, spans, predictions, config."""
 from __future__ import annotations
 
 import hashlib
@@ -29,57 +26,33 @@ class Technique(str, Enum):
 
 
 _TECHNIQUE_BY_VALUE = {t.value: t for t in Technique}
+
+# Aliases for LLM output variations (case, separator, common shortenings).
 _ALIASES: dict[str, Technique] = {}
 for t in Technique:
     canonical = t.value
-    _ALIASES[canonical] = t
     _ALIASES[canonical.lower()] = t
     simple = canonical.replace("-", "_").replace(",", "_")
-    _ALIASES[simple] = t
     _ALIASES[simple.lower()] = t
 
-_MANUAL_ALIASES = {
+_ALIASES.update({
     "loaded language": Technique.LOADED_LANGUAGE,
     "name calling": Technique.NAME_CALLING,
-    "name_calling": Technique.NAME_CALLING,
     "labeling": Technique.NAME_CALLING,
     "appeal to fear": Technique.APPEAL_TO_FEAR,
-    "appeal_to_fear": Technique.APPEAL_TO_FEAR,
-    "appeal to fear-prejudice": Technique.APPEAL_TO_FEAR,
     "flag waving": Technique.FLAG_WAVING,
-    "flag_waving": Technique.FLAG_WAVING,
     "causal oversimplification": Technique.CAUSAL_OVERSIMPLIFICATION,
-    "causal_oversimplification": Technique.CAUSAL_OVERSIMPLIFICATION,
     "appeal to authority": Technique.APPEAL_TO_AUTHORITY,
-    "appeal_to_authority": Technique.APPEAL_TO_AUTHORITY,
-    "black and white": Technique.BLACK_AND_WHITE,
-    "black_and_white": Technique.BLACK_AND_WHITE,
-    "black-and-white fallacy": Technique.BLACK_AND_WHITE,
+    "black and white fallacy": Technique.BLACK_AND_WHITE,
     "false dilemma": Technique.BLACK_AND_WHITE,
-    "false_dilemma": Technique.BLACK_AND_WHITE,
-    "thought terminating cliche": Technique.THOUGHT_TERMINATING,
-    "thought_terminating_cliche": Technique.THOUGHT_TERMINATING,
-    "thought-terminating cliches": Technique.THOUGHT_TERMINATING,
     "thought terminating cliches": Technique.THOUGHT_TERMINATING,
     "bandwagon": Technique.BANDWAGON,
     "reductio ad hitlerum": Technique.BANDWAGON,
-    "exaggeration": Technique.EXAGGERATION,
-    "minimisation": Technique.EXAGGERATION,
-    "exaggeration minimisation": Technique.EXAGGERATION,
-    "slogans": Technique.SLOGANS,
-    "repetition": Technique.REPETITION,
-    "doubt": Technique.DOUBT,
     "whataboutism": Technique.WHATABOUTISM,
-    "straw_men": Technique.WHATABOUTISM,
     "straw men": Technique.WHATABOUTISM,
     "straw man": Technique.WHATABOUTISM,
-    "red_herring": Technique.WHATABOUTISM,
     "red herring": Technique.WHATABOUTISM,
-    "whataboutism,straw_men,red_herring": Technique.WHATABOUTISM,
-    "whataboutism, straw_men, red_herring": Technique.WHATABOUTISM,
-    "whataboutism straw_men red_herring": Technique.WHATABOUTISM,
-}
-_ALIASES.update({k.lower(): v for k, v in _MANUAL_ALIASES.items()})
+})
 
 
 def normalise_technique(raw: str) -> Technique | None:
@@ -88,13 +61,11 @@ def normalise_technique(raw: str) -> Technique | None:
         return None
     if raw in _TECHNIQUE_BY_VALUE:
         return _TECHNIQUE_BY_VALUE[raw]
-    key = raw.lower().strip()
+    key = raw.lower()
     if key in _ALIASES:
         return _ALIASES[key]
     key = key.replace("-", "_").replace(",", "_").replace(" ", "_")
-    if key in _ALIASES:
-        return _ALIASES[key]
-    return None
+    return _ALIASES.get(key)
 
 
 class GoldSpan(BaseModel):
@@ -116,10 +87,9 @@ class PredictedSpan(BaseModel):
 
     pass_id: int = 0
     agreement_count: int = 1
-    confidence: float = -1.0
     verdict: str = ""
 
-    # Diagnostics
+    # Consolidation diagnostics
     original_technique: Technique | None = None
     original_span_text: str = ""
     original_start: int = -1
@@ -153,16 +123,12 @@ class Prediction(BaseModel):
     total_cost_usd: float = 0.0
     model: str = ""
     strategy: str = ""
-
-    # "permissive" = CONFIRMED + POSSIBLE; "strict" = CONFIRMED only.
-    # Default permissive matches OLD behaviour (avoids zero-recall on
-    # over-conservative adjudicators). Set "strict" for ablation.
-    eval_mode: str = "permissive"
+    eval_mode: str = "permissive"  # "permissive" = CONFIRMED+POSSIBLE; "strict" = CONFIRMED only
 
     @property
     def confirmed_spans(self) -> list[PredictedSpan]:
         if not any(s.verdict for s in self.spans):
-            return self.spans  # Non-ASV strategies have no verdicts
+            return self.spans
         if self.eval_mode == "strict":
             return [s for s in self.spans if s.verdict == "CONFIRMED"]
         return [s for s in self.spans if s.verdict in ("CONFIRMED", "POSSIBLE")]
@@ -170,7 +136,7 @@ class Prediction(BaseModel):
 
 class ExperimentConfig(BaseModel):
     name: str
-    strategy: str  # zero_shot, few_shot, cot, asv, consol, hybrid
+    strategy: str  # zero_shot, few_shot, asv, consol, hybrid
     model: str = "gpt-4o"
     temperature: float = 0.0
     max_tokens: int = 4096
@@ -178,7 +144,6 @@ class ExperimentConfig(BaseModel):
 
     asv_num_passes: int = 3
     asv_temperatures: list[float] = Field(default_factory=lambda: [0.5, 0.6, 0.7])
-    asv_stages: int = 2
 
     verify_model: str | None = None
     eval_mode: str = "permissive"
@@ -190,8 +155,5 @@ class ExperimentConfig(BaseModel):
     max_cost_usd: float = 50.0
 
     def run_id(self) -> str:
-        key = (
-            f"{self.strategy}_{self.model}_"
-            f"{self.verify_model}_{self.eval_mode}_{self.seed}"
-        )
+        key = f"{self.strategy}_{self.model}_{self.verify_model}_{self.eval_mode}_{self.seed}"
         return hashlib.md5(key.encode()).hexdigest()[:8]

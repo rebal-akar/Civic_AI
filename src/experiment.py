@@ -1,7 +1,7 @@
-"""
-Experiment runner — orchestrates the full pipeline.
+"""Experiment runner for the five prompting strategies.
 
-Strategies: zero_shot, few_shot, cot, asv, consol, hybrid
+Strategies: zero_shot, few_shot, asv (detect + critique), consol (detect +
+consolidate), hybrid (detect + critique + refinement).
 """
 from __future__ import annotations
 
@@ -20,11 +20,7 @@ from src.evaluation.charts import generate_diagnostic_charts
 from src.evaluation.diagnostics import compute_all_diagnostics
 from src.evaluation.metrics import evaluate, print_results
 from src.llm_client import LLMClient
-from src.parser import merge_multipass, parse_llm_response
-from src.prompts.adjudication import (
-    STAGE3_SYSTEM, STAGE3_USER,
-    format_detections_for_stage3, format_critiques_for_stage3,
-)
+from src.parser import merge_multipass, parse_llm_response, _extract_json
 from src.prompts.consolidation import (
     CONSOL_SYSTEM, CONSOL_USER, format_candidates_for_consol,
 )
@@ -35,7 +31,6 @@ from src.prompts.critique import (
     STAGE2_SYSTEM, STAGE2_USER, format_detections_for_stage2,
 )
 from src.prompts.detection import (
-    COT_SYSTEM, COT_USER,
     FEW_SHOT_SYSTEM, FEW_SHOT_USER,
     STAGE1_SYSTEM, STAGE1_USER,
     ZERO_SHOT_SYSTEM, ZERO_SHOT_USER,
@@ -47,22 +42,17 @@ from src.schemas import (
 logger = logging.getLogger(__name__)
 
 
-# ── Dispatch ──────────────────────────────────────────────────────────────
-
 async def run_single_article(
     article: Article, client: LLMClient, config: ExperimentConfig,
 ) -> Prediction:
     if config.strategy == "asv":
         return await _run_asv(article, client, config)
-    elif config.strategy == "consol":
+    if config.strategy == "consol":
         return await _run_consol(article, client, config)
-    elif config.strategy == "hybrid":
+    if config.strategy == "hybrid":
         return await _run_hybrid(article, client, config)
-    else:
-        return await _run_baseline(article, client, config)
+    return await _run_baseline(article, client, config)
 
-
-# ── Snapshot helper ───────────────────────────────────────────────────────
 
 def _snapshot_span(s: PredictedSpan) -> dict:
     return {
@@ -82,7 +72,6 @@ def _snapshot_span(s: PredictedSpan) -> dict:
 
 
 def _git_commit() -> str:
-    """Return the current git commit hash, or 'unknown' if unavailable."""
     try:
         return subprocess.check_output(
             ["git", "rev-parse", "--short", "HEAD"],
@@ -92,8 +81,7 @@ def _git_commit() -> str:
         return "unknown"
 
 
-def _serialise_pass_spans(pass_results: list[list]) -> list[list[dict]]:
-    """Serialise per-pass parsed spans for storage in stage_outputs."""
+def _serialise_pass_spans(pass_results: list[list[PredictedSpan]]) -> list[list[dict]]:
     return [
         [
             {
@@ -111,17 +99,12 @@ def _serialise_pass_spans(pass_results: list[list]) -> list[list[dict]]:
     ]
 
 
-# ── Baseline (zero_shot, few_shot, cot) ───────────────────────────────────
+# Baseline strategies: zero-shot and few-shot.
 
 async def _run_baseline(
     article: Article, client: LLMClient, config: ExperimentConfig,
 ) -> Prediction:
-    use_json_mode = True
-    if config.strategy == "cot":
-        system_prompt = COT_SYSTEM
-        user_template = COT_USER
-        use_json_mode = False
-    elif config.strategy == "few_shot":
+    if config.strategy == "few_shot":
         system_prompt = FEW_SHOT_SYSTEM
         user_template = FEW_SHOT_USER
     else:
@@ -136,7 +119,7 @@ async def _run_baseline(
             user_prompt=user_prompt,
             temperature=config.temperature,
             max_tokens=config.max_tokens,
-            response_format={"type": "json_object"} if use_json_mode else None,
+            response_format={"type": "json_object"},
             seed=config.seed,
         )
 
@@ -154,18 +137,14 @@ async def _run_baseline(
     )
 
 
-# ── ASV (2-stage and 3-stage) ─────────────────────────────────────────────
+# Stage 1: multi-pass detection (shared by asv, consol, hybrid).
 
-async def _run_asv(
-    article: Article, client: LLMClient, config: ExperimentConfig,
-) -> Prediction:
-    stage_outputs: dict[str, Any] = {}
-    stage_snapshots: dict[str, list[dict]] = {}
-
-    # Stage 1: Multi-pass detection
+async def _run_stage1(
+    article: Article, client: LLMClient, config: ExperimentConfig, label: str,
+) -> tuple[list[PredictedSpan], dict[str, Any], list[dict]]:
     user_prompt = STAGE1_USER.format(text=article.text)
     pass_results: list[list[PredictedSpan]] = []
-    raw_s1_outputs: list[str] = []
+    raw_outputs: list[str] = []
 
     with client.cost_tracker.stage("stage1_detection"):
         for i, temp in enumerate(config.asv_temperatures[:config.asv_num_passes]):
@@ -177,28 +156,40 @@ async def _run_asv(
                 response_format={"type": "json_object"},
                 seed=config.seed + i,
             )
-            raw_s1_outputs.append(raw)
+            raw_outputs.append(raw)
             spans, errors = parse_llm_response(raw, article.text, pass_id=i)
             for s in spans:
                 s.stage_history.append(f"S1_pass{i}")
             pass_results.append(spans)
             if errors:
-                logger.warning(f"ASV S1 parse errors [{article.id}] pass {i}: {errors}")
+                logger.warning(f"{label} S1 parse errors [{article.id}] pass {i}: {errors}")
 
-    stage_outputs["stage1_per_pass_spans"] = _serialise_pass_spans(pass_results)
     merged = merge_multipass(pass_results, article.text)
     for s in merged:
         s.stage_history.append("S1_merged")
 
-    stage_outputs["stage1_raw"] = raw_s1_outputs
-    stage_outputs["stage1_per_pass_counts"] = [len(p) for p in pass_results]
-    stage_outputs["stage1_merged_count"] = len(merged)
-    stage_snapshots["after_s1"] = [_snapshot_span(s) for s in merged]
+    stage_outputs = {
+        "stage1_raw": raw_outputs,
+        "stage1_per_pass_spans": _serialise_pass_spans(pass_results),
+        "stage1_per_pass_counts": [len(p) for p in pass_results],
+        "stage1_merged_count": len(merged),
+    }
+    snapshot = [_snapshot_span(s) for s in merged]
 
     logger.info(
-        f"ASV S1 [{article.id}]: "
+        f"{label} S1 [{article.id}]: "
         f"{sum(len(p) for p in pass_results)} total -> {len(merged)} merged"
     )
+    return merged, stage_outputs, snapshot
+
+
+# ASV: Stage 1 detection + Stage 2 adversarial critique.
+
+async def _run_asv(
+    article: Article, client: LLMClient, config: ExperimentConfig,
+) -> Prediction:
+    merged, stage_outputs, s1_snap = await _run_stage1(article, client, config, "ASV")
+    stage_snapshots = {"after_s1": s1_snap}
 
     if not merged:
         return Prediction(
@@ -207,16 +198,16 @@ async def _run_asv(
             eval_mode=config.eval_mode,
         )
 
-    # Stage 2: Critique
-    detections_for_s2 = [
+    detections = [
         {"span_text": s.span_text, "technique": s.technique.value,
          "agreement_count": s.agreement_count}
         for s in merged
     ]
     s2_user = STAGE2_USER.format(
         text=article.text,
-        detections_json=format_detections_for_stage2(detections_for_s2),
+        detections_json=format_detections_for_stage2(detections),
     )
+
     with client.cost_tracker.stage("stage2_critique"):
         raw_s2 = await client.complete(
             system_prompt=STAGE2_SYSTEM, user_prompt=s2_user,
@@ -225,52 +216,24 @@ async def _run_asv(
             model_override=config.verify_model,
             seed=config.seed,
         )
-    stage_outputs["stage2_raw"] = raw_s2
-    stage_outputs["stage2_model"] = config.verify_model or config.model
 
     critiques = _parse_critiques(raw_s2)
+    stage_outputs["stage2_raw"] = raw_s2
+    stage_outputs["stage2_model"] = config.verify_model or config.model
     stage_outputs["stage2_critiques_count"] = len(critiques)
     stage_outputs["stage2_critique_parsed"] = critiques
 
-    logger.info(
-        f"ASV S2 [{article.id}]: {len(critiques)} critiques "
-        f"({sum(1 for c in critiques if c.get('verdict') == 'CHALLENGE')} CHALLENGE, "
-        f"{sum(1 for c in critiques if c.get('verdict') == 'CONCEDE')} CONCEDE)"
-    )
-
-    if config.asv_stages >= 3:
-        s3_user = STAGE3_USER.format(
-            text=article.text,
-            detections_json=format_detections_for_stage3(detections_for_s2),
-            critiques_json=format_critiques_for_stage3(critiques),
-        )
-        with client.cost_tracker.stage("stage3_adjudication"):
-            raw_s3 = await client.complete(
-                system_prompt=STAGE3_SYSTEM, user_prompt=s3_user,
-                temperature=0.0, max_tokens=config.max_tokens,
-                response_format={"type": "json_object"},
-                seed=config.seed,
-            )
-        stage_outputs["stage3_raw"] = raw_s3
-        verdicts = _parse_verdicts(raw_s3)
-        stage_outputs["stage3_verdicts_count"] = len(verdicts)
-        stage_outputs["stage3_verdicts_parsed"] = verdicts
-        _apply_verdicts(merged, verdicts)
-    else:
-        _apply_critique_verdicts(merged, critiques)
-
+    _apply_critique_verdicts(merged, critiques)
     for s in merged:
         s.stage_history.append(f"S2_{s.verdict}")
     stage_snapshots["after_s2"] = [_snapshot_span(s) for s in merged]
-    if config.asv_stages >= 3:
-        stage_snapshots["after_s3"] = [_snapshot_span(s) for s in merged]
 
-    confirmed = [s for s in merged if s.verdict == "CONFIRMED"]
-    possible = [s for s in merged if s.verdict == "POSSIBLE"]
-    rejected = [s for s in merged if s.verdict == "REJECTED"]
+    confirmed = sum(1 for s in merged if s.verdict == "CONFIRMED")
+    possible = sum(1 for s in merged if s.verdict == "POSSIBLE")
+    rejected = sum(1 for s in merged if s.verdict == "REJECTED")
     logger.info(
-        f"ASV final [{article.id}]: {len(confirmed)} CONFIRMED, "
-        f"{len(possible)} POSSIBLE, {len(rejected)} REJECTED"
+        f"ASV final [{article.id}]: {confirmed} CONFIRMED, "
+        f"{possible} POSSIBLE, {rejected} REJECTED"
     )
 
     return Prediction(
@@ -280,49 +243,13 @@ async def _run_asv(
     )
 
 
-# ── Consol ────────────────────────────────────────────────────────────────
+# Consolidation: Stage 1 detection + Stage 2 constructive consolidation.
 
 async def _run_consol(
     article: Article, client: LLMClient, config: ExperimentConfig,
 ) -> Prediction:
-    stage_outputs: dict[str, Any] = {}
-    stage_snapshots: dict[str, list[dict]] = {}
-
-    # Stage 1: Multi-pass detection
-    user_prompt = STAGE1_USER.format(text=article.text)
-    pass_results: list[list[PredictedSpan]] = []
-    raw_s1_outputs: list[str] = []
-
-    with client.cost_tracker.stage("stage1_detection"):
-        for i, temp in enumerate(config.asv_temperatures[:config.asv_num_passes]):
-            raw = await client.complete(
-                system_prompt=STAGE1_SYSTEM, user_prompt=user_prompt,
-                temperature=temp, max_tokens=config.max_tokens,
-                response_format={"type": "json_object"},
-                seed=config.seed + i,
-            )
-            raw_s1_outputs.append(raw)
-            spans, errors = parse_llm_response(raw, article.text, pass_id=i)
-            for s in spans:
-                s.stage_history.append(f"S1_pass{i}")
-            pass_results.append(spans)
-            if errors:
-                logger.warning(f"Consol S1 parse errors [{article.id}] pass {i}: {errors}")
-
-    stage_outputs["stage1_per_pass_spans"] = _serialise_pass_spans(pass_results)
-    merged = merge_multipass(pass_results, article.text)
-    for s in merged:
-        s.stage_history.append("S1_merged")
-
-    stage_outputs["stage1_raw"] = raw_s1_outputs
-    stage_outputs["stage1_per_pass_counts"] = [len(p) for p in pass_results]
-    stage_outputs["stage1_merged_count"] = len(merged)
-    stage_snapshots["after_s1"] = [_snapshot_span(s) for s in merged]
-
-    logger.info(
-        f"Consol S1 [{article.id}]: "
-        f"{sum(len(p) for p in pass_results)} total -> {len(merged)} merged"
-    )
+    merged, stage_outputs, s1_snap = await _run_stage1(article, client, config, "Consol")
+    stage_snapshots = {"after_s1": s1_snap}
 
     if not merged:
         return Prediction(
@@ -331,16 +258,16 @@ async def _run_consol(
             eval_mode=config.eval_mode,
         )
 
-    # Stage 2: Consolidation
-    candidates_for_consol = [
+    candidates = [
         {"span_text": s.span_text, "technique": s.technique.value,
          "agreement_count": s.agreement_count, "reasoning": s.reasoning or ""}
         for s in merged
     ]
     consol_user = CONSOL_USER.format(
         text=article.text, num_passes=config.asv_num_passes,
-        candidates_json=format_candidates_for_consol(candidates_for_consol),
+        candidates_json=format_candidates_for_consol(candidates),
     )
+
     with client.cost_tracker.stage("stage2_consolidation"):
         raw_s2 = await client.complete(
             system_prompt=CONSOL_SYSTEM, user_prompt=consol_user,
@@ -349,22 +276,22 @@ async def _run_consol(
             model_override=config.verify_model,
             seed=config.seed,
         )
+
+    consol_annotations = _parse_annotations(raw_s2)
     stage_outputs["stage2_consol_raw"] = raw_s2
     stage_outputs["stage2_model"] = config.verify_model or config.model
-
-    consol_annotations = _parse_consol_output(raw_s2)
     stage_outputs["stage2_consol_count"] = len(consol_annotations)
     stage_outputs["stage2_consol_parsed"] = consol_annotations
 
-    _apply_consol_decisions(merged, consol_annotations, article.text, no_drop=False)
+    _apply_consol_decisions(merged, consol_annotations, article.text)
     stage_snapshots["after_s2"] = [_snapshot_span(s) for s in merged]
 
-    confirmed = [s for s in merged if s.verdict == "CONFIRMED"]
-    rejected = [s for s in merged if s.verdict == "REJECTED"]
-    possible = [s for s in merged if s.verdict == "POSSIBLE"]
+    confirmed = sum(1 for s in merged if s.verdict == "CONFIRMED")
+    rejected = sum(1 for s in merged if s.verdict == "REJECTED")
+    possible = sum(1 for s in merged if s.verdict == "POSSIBLE")
     logger.info(
-        f"Consol S2 [{article.id}]: {len(confirmed)} CONFIRMED, "
-        f"{len(rejected)} REJECTED, {len(possible)} POSSIBLE"
+        f"Consol S2 [{article.id}]: {confirmed} CONFIRMED, "
+        f"{rejected} REJECTED, {possible} POSSIBLE"
     )
 
     return Prediction(
@@ -373,57 +300,14 @@ async def _run_consol(
         eval_mode=config.eval_mode,
     )
 
-    # ── Hybrid (3-stage: detect → critique-filter → refinement-only) ────────
+
+# Hybrid: detect + adversarial critique (filters) + refinement (no drops).
 
 async def _run_hybrid(
     article: Article, client: LLMClient, config: ExperimentConfig,
 ) -> Prediction:
-    """Hybrid: ASV detection + critique, then refinement-only Stage 3.
-
-    Stage 1: Multi-pass detection (3 passes, union merge) — recall-oriented.
-    Stage 2: Adversarial critique — filters out low-agreement challenged spans.
-    Stage 3: Refinement-only — relabel and trim on survivors. The refinement
-             prompt explicitly forbids dropping, so the LLM is never asked to
-             re-litigate decisions Stage 2 already made.
-    """
-    stage_outputs: dict[str, Any] = {}
-    stage_snapshots: dict[str, list[dict]] = {}
-
-    # ── Stage 1: Multi-pass detection ─────────────────────────────────────
-    user_prompt = STAGE1_USER.format(text=article.text)
-    pass_results: list[list[PredictedSpan]] = []
-    raw_s1_outputs: list[str] = []
-
-    with client.cost_tracker.stage("stage1_detection"):
-        for i, temp in enumerate(config.asv_temperatures[:config.asv_num_passes]):
-            raw = await client.complete(
-                system_prompt=STAGE1_SYSTEM, user_prompt=user_prompt,
-                temperature=temp, max_tokens=config.max_tokens,
-                response_format={"type": "json_object"},
-                seed=config.seed + i,
-            )
-            raw_s1_outputs.append(raw)
-            spans, errors = parse_llm_response(raw, article.text, pass_id=i)
-            for s in spans:
-                s.stage_history.append(f"S1_pass{i}")
-            pass_results.append(spans)
-            if errors:
-                logger.warning(f"Hybrid S1 parse errors [{article.id}] pass {i}: {errors}")
-
-    stage_outputs["stage1_per_pass_spans"] = _serialise_pass_spans(pass_results)
-    merged = merge_multipass(pass_results, article.text)
-    for s in merged:
-        s.stage_history.append("S1_merged")
-
-    stage_outputs["stage1_raw"] = raw_s1_outputs
-    stage_outputs["stage1_per_pass_counts"] = [len(p) for p in pass_results]
-    stage_outputs["stage1_merged_count"] = len(merged)
-    stage_snapshots["after_s1"] = [_snapshot_span(s) for s in merged]
-
-    logger.info(
-        f"Hybrid S1 [{article.id}]: "
-        f"{sum(len(p) for p in pass_results)} total -> {len(merged)} merged"
-    )
+    merged, stage_outputs, s1_snap = await _run_stage1(article, client, config, "Hybrid")
+    stage_snapshots = {"after_s1": s1_snap}
 
     if not merged:
         return Prediction(
@@ -432,15 +316,15 @@ async def _run_hybrid(
             eval_mode=config.eval_mode,
         )
 
-    # ── Stage 2: Adversarial critique (filtering allowed) ─────────────────
-    detections_for_s2 = [
+    # Stage 2: adversarial critique
+    detections = [
         {"span_text": s.span_text, "technique": s.technique.value,
          "agreement_count": s.agreement_count}
         for s in merged
     ]
     s2_user = STAGE2_USER.format(
         text=article.text,
-        detections_json=format_detections_for_stage2(detections_for_s2),
+        detections_json=format_detections_for_stage2(detections),
     )
     with client.cost_tracker.stage("stage2_critique"):
         raw_s2 = await client.complete(
@@ -450,10 +334,10 @@ async def _run_hybrid(
             model_override=config.verify_model,
             seed=config.seed,
         )
-    stage_outputs["stage2_critique_raw"] = raw_s2
-    stage_outputs["stage2_model"] = config.verify_model or config.model
 
     critiques = _parse_critiques(raw_s2)
+    stage_outputs["stage2_critique_raw"] = raw_s2
+    stage_outputs["stage2_model"] = config.verify_model or config.model
     stage_outputs["stage2_critique_parsed"] = critiques
     _apply_critique_verdicts(merged, critiques)
     for s in merged:
@@ -475,14 +359,14 @@ async def _run_hybrid(
             eval_mode=config.eval_mode,
         )
 
-    # ── Stage 3: Refinement (no drops allowed by prompt) ──────────────────
-    candidates_for_refine = [
+    # Stage 3: refinement (no drops allowed by prompt)
+    candidates = [
         {"span_text": s.span_text, "technique": s.technique.value}
         for s in surviving
     ]
     refine_user = REFINE_USER.format(
         text=article.text,
-        candidates_json=format_candidates_for_refine(candidates_for_refine),
+        candidates_json=format_candidates_for_refine(candidates),
     )
     with client.cost_tracker.stage("stage3_refinement"):
         raw_s3 = await client.complete(
@@ -492,16 +376,14 @@ async def _run_hybrid(
             model_override=config.verify_model,
             seed=config.seed,
         )
+
+    refine_annotations = _parse_annotations(raw_s3)
     stage_outputs["stage3_refine_raw"] = raw_s3
     stage_outputs["stage3_model"] = config.verify_model or config.model
-
-    refine_annotations = _parse_refine_output(raw_s3)
     stage_outputs["stage3_refine_parsed"] = refine_annotations
-    disobey_count = _apply_refinement_decisions(
-        surviving, refine_annotations, article.text,
-    )
-    stage_outputs["stage3_refiner_disobeyed"] = disobey_count
 
+    disobey_count = _apply_refinement_decisions(surviving, refine_annotations, article.text)
+    stage_outputs["stage3_refiner_disobeyed"] = disobey_count
     stage_snapshots["after_s3"] = [_snapshot_span(s) for s in merged]
 
     n_relabeled = sum(1 for s in surviving if s.was_relabeled)
@@ -519,21 +401,9 @@ async def _run_hybrid(
     )
 
 
-# ── Consolidation application with diagnostic tracking ────────────────────
+# Consolidation / refinement decision application.
 
-def _apply_consol_decisions(
-    spans: list[PredictedSpan],
-    consol_annotations: list[dict],
-    article_text: str,
-    no_drop: bool = False,
-) -> None:
-    """Apply consolidation decisions with substring fallback matching.
-
-    Args:
-        no_drop: If True (hybrid_v2 mode), dropped candidates are converted
-                 to kept (only relabel/trim allowed on surviving spans).
-    """
-    # Snapshot original state for diagnostics
+def _snapshot_originals(spans: list[PredictedSpan]) -> None:
     for s in spans:
         if s.original_technique is None:
             s.original_technique = s.technique
@@ -541,41 +411,59 @@ def _apply_consol_decisions(
             s.original_start = s.start
             s.original_end = s.end
 
-    def _norm(t: str) -> str:
-        return re.sub(r"\s+", " ", t.lower().strip())
 
+def _norm_text(t: str) -> str:
+    return re.sub(r"\s+", " ", t.lower().strip())
+
+
+def _build_annotation_lookup(annotations: list[dict]) -> tuple[dict, list[tuple[str, dict]]]:
+    """Build exact-match lookup and full annotation list for substring fallback."""
     exact_lookup: dict[str, dict] = {}
     all_anns: list[tuple[str, dict]] = []
-    for ann in consol_annotations:
+    for ann in annotations:
         for key_field in ("original_text", "text"):
             raw = ann.get(key_field, "")
             if raw:
-                norm = _norm(raw)
+                norm = _norm_text(raw)
                 if norm not in exact_lookup:
                     exact_lookup[norm] = ann
                 all_anns.append((norm, ann))
+    return exact_lookup, all_anns
 
-    used_anns = set()
 
-    def _find_match(span_norm: str) -> dict | None:
-        # 1. Exact normalised match
-        if span_norm in exact_lookup:
-            ann = exact_lookup[span_norm]
-            if id(ann) not in used_anns:
-                used_anns.add(id(ann))
-                return ann
-        # 2. Substring fallback (either direction)
-        for ann_norm, ann in all_anns:
-            if id(ann) in used_anns:
-                continue
-            if span_norm in ann_norm or ann_norm in span_norm:
-                used_anns.add(id(ann))
-                return ann
-        return None
+def _find_annotation(
+    span_norm: str,
+    exact_lookup: dict,
+    all_anns: list[tuple[str, dict]],
+    used: set,
+) -> dict | None:
+    """Match a span to an annotation: exact first, then substring either direction."""
+    if span_norm in exact_lookup:
+        ann = exact_lookup[span_norm]
+        if id(ann) not in used:
+            used.add(id(ann))
+            return ann
+    for ann_norm, ann in all_anns:
+        if id(ann) in used:
+            continue
+        if span_norm in ann_norm or ann_norm in span_norm:
+            used.add(id(ann))
+            return ann
+    return None
+
+
+def _apply_consol_decisions(
+    spans: list[PredictedSpan],
+    consol_annotations: list[dict],
+    article_text: str,
+) -> None:
+    _snapshot_originals(spans)
+    exact_lookup, all_anns = _build_annotation_lookup(consol_annotations)
+    used: set = set()
 
     for span in spans:
-        span_norm = _norm(span.span_text)
-        match = _find_match(span_norm)
+        span_norm = _norm_text(span.span_text)
+        match = _find_annotation(span_norm, exact_lookup, all_anns, used)
 
         if not match:
             span.verdict = span.verdict or "POSSIBLE"
@@ -584,9 +472,6 @@ def _apply_consol_decisions(
             continue
 
         action = match.get("action", "kept").lower()
-        if no_drop and action == "dropped":
-            action = "kept"
-
         span.consol_action = action
         span.stage_history.append(f"consol_{action}")
 
@@ -596,7 +481,6 @@ def _apply_consol_decisions(
             span.verdict = "REJECTED"
             continue
 
-        # Relabel
         new_type = match.get("type", "")
         if new_type:
             corrected = normalise_technique(new_type)
@@ -604,12 +488,9 @@ def _apply_consol_decisions(
                 span.technique = corrected
                 span.was_relabeled = True
 
-        # Trim/expand with closest-occurrence resolution
         new_text = match.get("text", "")
         if new_text and new_text != span.span_text:
-            new_start = _find_closest_occurrence(
-                article_text, new_text, anchor=span.start
-            )
+            new_start = _find_closest_occurrence(article_text, new_text, anchor=span.start)
             if new_start >= 0:
                 span.span_text = new_text
                 span.start = new_start
@@ -617,66 +498,6 @@ def _apply_consol_decisions(
                 span.was_trimmed = True
 
         span.verdict = "CONFIRMED"
-        span.confidence = 80.0
-
-
-def _find_closest_occurrence(haystack: str, needle: str, anchor: int) -> int:
-    """Find occurrence of `needle` whose start is closest to `anchor`.
-    Fixes the first-occurrence ambiguity bug when text appears multiple times.
-    """
-    if not needle:
-        return -1
-    occurrences = []
-    pos = 0
-    while True:
-        idx = haystack.find(needle, pos)
-        if idx < 0:
-            break
-        occurrences.append(idx)
-        pos = idx + 1
-    if not occurrences:
-        lower_h, lower_n = haystack.lower(), needle.lower()
-        pos = 0
-        while True:
-            idx = lower_h.find(lower_n, pos)
-            if idx < 0:
-                break
-            occurrences.append(idx)
-            pos = idx + 1
-    if not occurrences:
-        return -1
-    if anchor < 0:
-        return occurrences[0]
-    return min(occurrences, key=lambda o: abs(o - anchor))
-
-
-# ── JSON parsers ──────────────────────────────────────────────────────────
-
-def _parse_consol_output(raw: str) -> list[dict]:
-    from src.parser import _extract_json
-    cleaned = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL)
-    obj = _extract_json(cleaned)
-    if obj is None:
-        logger.warning("Failed to parse consolidation output")
-        return []
-    annotations = obj.get("annotations", [])
-    if not isinstance(annotations, list):
-        return []
-    return annotations
-
-
-def _parse_refine_output(raw: str) -> list[dict]:
-    """Parse refinement stage JSON output (same shape as consol)."""
-    from src.parser import _extract_json
-    cleaned = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL)
-    obj = _extract_json(cleaned)
-    if obj is None:
-        logger.warning("Failed to parse refinement output")
-        return []
-    annotations = obj.get("annotations", [])
-    if not isinstance(annotations, list):
-        return []
-    return annotations
 
 
 def _apply_refinement_decisions(
@@ -684,53 +505,15 @@ def _apply_refinement_decisions(
     refine_annotations: list[dict],
     article_text: str,
 ) -> int:
-    """Apply refinement decisions. No drops permitted — if the LLM emits
-    action='dropped' despite being told not to, log it and treat as kept.
-
-    Returns the number of 'disobey' events (LLM outputting dropped anyway).
-    """
-    for s in spans:
-        if s.original_technique is None:
-            s.original_technique = s.technique
-            s.original_span_text = s.span_text
-            s.original_start = s.start
-            s.original_end = s.end
-
-    def _norm(t: str) -> str:
-        return re.sub(r"\s+", " ", t.lower().strip())
-
-    exact_lookup: dict[str, dict] = {}
-    all_anns: list[tuple[str, dict]] = []
-    for ann in refine_annotations:
-        for key_field in ("original_text", "text"):
-            raw = ann.get(key_field, "")
-            if raw:
-                norm = _norm(raw)
-                if norm not in exact_lookup:
-                    exact_lookup[norm] = ann
-                all_anns.append((norm, ann))
-
-    used_anns: set = set()
-
-    def _find_match(span_norm: str) -> dict | None:
-        if span_norm in exact_lookup:
-            ann = exact_lookup[span_norm]
-            if id(ann) not in used_anns:
-                used_anns.add(id(ann))
-                return ann
-        for ann_norm, ann in all_anns:
-            if id(ann) in used_anns:
-                continue
-            if span_norm in ann_norm or ann_norm in span_norm:
-                used_anns.add(id(ann))
-                return ann
-        return None
-
+    """Like consolidation but disallows drops. Returns count of disobey events."""
+    _snapshot_originals(spans)
+    exact_lookup, all_anns = _build_annotation_lookup(refine_annotations)
+    used: set = set()
     disobey_count = 0
 
     for span in spans:
-        span_norm = _norm(span.span_text)
-        match = _find_match(span_norm)
+        span_norm = _norm_text(span.span_text)
+        match = _find_annotation(span_norm, exact_lookup, all_anns, used)
 
         if not match:
             span.verdict = span.verdict or "CONFIRMED"
@@ -739,7 +522,6 @@ def _apply_refinement_decisions(
             continue
 
         action = match.get("action", "kept").lower()
-
         if action == "dropped":
             disobey_count += 1
             logger.warning(
@@ -760,9 +542,7 @@ def _apply_refinement_decisions(
 
         new_text = match.get("text", "")
         if new_text and new_text != span.span_text:
-            new_start = _find_closest_occurrence(
-                article_text, new_text, anchor=span.start
-            )
+            new_start = _find_closest_occurrence(article_text, new_text, anchor=span.start)
             if new_start >= 0:
                 span.span_text = new_text
                 span.start = new_start
@@ -771,98 +551,84 @@ def _apply_refinement_decisions(
 
         if span.verdict not in ("CONFIRMED", "POSSIBLE"):
             span.verdict = "CONFIRMED"
-            span.confidence = 80.0
 
     return disobey_count
 
 
+def _find_closest_occurrence(haystack: str, needle: str, anchor: int) -> int:
+    """Find the occurrence of needle in haystack whose start is closest to anchor.
+
+    Prevents first-occurrence ambiguity when a span's text appears multiple times.
+    """
+    if not needle:
+        return -1
+
+    def _all_matches(h: str, n: str) -> list[int]:
+        out = []
+        pos = 0
+        while (idx := h.find(n, pos)) >= 0:
+            out.append(idx)
+            pos = idx + 1
+        return out
+
+    occurrences = _all_matches(haystack, needle)
+    if not occurrences:
+        occurrences = _all_matches(haystack.lower(), needle.lower())
+    if not occurrences:
+        return -1
+    if anchor < 0:
+        return occurrences[0]
+    return min(occurrences, key=lambda o: abs(o - anchor))
+
+
+# JSON parsers for stage outputs.
+
+def _parse_annotations(raw: str) -> list[dict]:
+    """Parse {'annotations': [...]} from consol/refine output."""
+    obj = _extract_json(raw)
+    if obj is None:
+        logger.warning("Failed to parse consolidation/refinement output")
+        return []
+    anns = obj.get("annotations", [])
+    return anns if isinstance(anns, list) else []
+
+
 def _parse_critiques(raw: str) -> list[dict]:
-    from src.parser import _extract_json
-    cleaned = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL)
-    obj = _extract_json(cleaned)
+    obj = _extract_json(raw)
     if obj is None:
         return []
     return obj.get("critiques", [])
 
 
-def _parse_verdicts(raw: str) -> list[dict]:
-    from src.parser import _extract_json
-    cleaned = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL)
-    obj = _extract_json(cleaned)
-    if obj is None:
-        return []
-    return obj.get("verdicts", [])
-
-
-def _apply_verdicts(spans: list[PredictedSpan], verdicts: list[dict]) -> None:
-    verdict_lookup: dict[tuple[str, str], dict] = {}
-    for v in verdicts:
-        key = (
-            re.sub(r"\s+", " ", v.get("span_text", "").lower().strip()),
-            v.get("technique", "").lower().strip(),
-        )
-        verdict_lookup[key] = v
-
-    for span in spans:
-        key = (
-            re.sub(r"\s+", " ", span.span_text.lower().strip()),
-            span.technique.value.lower().strip(),
-        )
-        v = verdict_lookup.get(key)
-        if v:
-            span.verdict = v.get("verdict", "").upper()
-            try:
-                span.confidence = float(v.get("confidence", -1))
-            except (ValueError, TypeError):
-                span.confidence = -1.0
-            if span.verdict not in ("CONFIRMED", "POSSIBLE", "REJECTED"):
-                if "confirm" in span.verdict.lower():
-                    span.verdict = "CONFIRMED"
-                elif "reject" in span.verdict.lower():
-                    span.verdict = "REJECTED"
-                else:
-                    span.verdict = "POSSIBLE"
-        else:
-            span.verdict = "POSSIBLE"
-            span.confidence = -1.0
-
-
-def _apply_critique_verdicts(spans: list[PredictedSpan], critiques: list[dict]) -> None:
-    critique_lookup: dict[tuple[str, str], dict] = {}
+def _apply_critique_verdicts(
+    spans: list[PredictedSpan], critiques: list[dict],
+) -> None:
+    """CONCEDE -> CONFIRMED; CHALLENGE + agreement>=2 -> POSSIBLE; else REJECTED."""
+    lookup: dict[tuple[str, str], dict] = {}
     for c in critiques:
         key = (
-            re.sub(r"\s+", " ", c.get("span_text", "").lower().strip()),
+            _norm_text(c.get("span_text", "")),
             c.get("technique", "").lower().strip(),
         )
-        critique_lookup[key] = c
+        lookup[key] = c
 
     for span in spans:
-        key = (
-            re.sub(r"\s+", " ", span.span_text.lower().strip()),
-            span.technique.value.lower().strip(),
-        )
-        c = critique_lookup.get(key)
-        if c:
-            cv = c.get("verdict", "").upper()
-            if cv == "CONCEDE":
-                span.verdict = "CONFIRMED"
-                span.confidence = 80.0
-            elif cv == "CHALLENGE":
-                if span.agreement_count >= 2:
-                    span.verdict = "POSSIBLE"
-                    span.confidence = 50.0
-                else:
-                    span.verdict = "REJECTED"
-                    span.confidence = 30.0
-            else:
-                span.verdict = "POSSIBLE"
-                span.confidence = 50.0
+        key = (_norm_text(span.span_text), span.technique.value.lower().strip())
+        c = lookup.get(key)
+        if not c:
+            span.verdict = "POSSIBLE"
+            continue
+
+        verdict = c.get("verdict", "").upper()
+        if verdict == "CONCEDE":
+            span.verdict = "CONFIRMED"
+        elif verdict == "CHALLENGE":
+            span.verdict = "POSSIBLE" if span.agreement_count >= 2 else "REJECTED"
         else:
             span.verdict = "POSSIBLE"
-            span.confidence = 50.0
 
 
-# ── run_experiment + diagnostic summary ───────────────────────────────────
+# Top-level orchestration.
 
 async def run_experiment(config: ExperimentConfig) -> dict[str, Any]:
     logger.info(f"Starting experiment: {config.name} ({config.strategy}, {config.model})")
@@ -899,7 +665,7 @@ async def run_experiment(config: ExperimentConfig) -> dict[str, Any]:
 
         if (i + 1) % 10 == 0:
             logger.info(
-                f"Progress: {i+1}/{len(articles)} articles, "
+                f"Progress: {i+1}/{len(articles)}, "
                 f"cost: {client.cost_tracker.summary()}"
             )
 
@@ -918,61 +684,19 @@ async def run_experiment(config: ExperimentConfig) -> dict[str, Any]:
         "cost": client.cost_tracker.to_dict(),
         "elapsed_seconds": round(elapsed, 1),
         "articles_processed": len(predictions),
-        "predictions": {
-            aid: {
-                "article_text": article_by_id[aid].text if aid in article_by_id else "",
-                "gold_spans": [
-                    {
-                        "technique": g.technique.value,
-                        "start": g.start,
-                        "end": g.end,
-                    }
-                    for g in (article_by_id[aid].gold_spans if aid in article_by_id else [])
-                ],
-                "all_spans": [
-                    {
-                        "technique": s.technique.value,
-                        "span_text": s.span_text,
-                        "start": s.start, "end": s.end,
-                        "reasoning": s.reasoning,
-                        "agreement_count": s.agreement_count,
-                        "confidence": s.confidence,
-                        "verdict": s.verdict,
-                        "pass_id": s.pass_id,
-                        "original_technique": (
-                            s.original_technique.value if s.original_technique else None
-                        ),
-                        "original_span_text": s.original_span_text,
-                        "original_start": s.original_start,
-                        "original_end": s.original_end,
-                        "was_relabeled": s.was_relabeled,
-                        "was_trimmed": s.was_trimmed,
-                        "consol_action": s.consol_action,
-                        "stage_history": s.stage_history,
-                    }
-                    for s in pred.spans
-                ],
-                "stage_snapshots": pred.stage_snapshots,
-                "stage_outputs": pred.stage_outputs,
-                "confirmed_count": len(pred.confirmed_spans),
-                "total_count": len(pred.spans),
-            }
-            for aid, pred in predictions.items()
+        "predictions": _serialise_predictions(predictions, article_by_id),
+        "run_metadata": {
+            "timestamp_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "git_commit": _git_commit(),
+            "config_hash": config.run_id(),
+            "strategy": config.strategy,
+            "model": config.model,
+            "verify_model": config.verify_model,
+            "eval_mode": config.eval_mode,
+            "seed": config.seed,
+            "n_articles_processed": len(predictions),
+            "n_articles_loaded": len(articles),
         },
-    }
-
-    results["run_metadata"] = {
-        "timestamp_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        "git_commit": _git_commit(),
-        "config_hash": config.run_id(),
-        "strategy": config.strategy,
-        "model": config.model,
-        "verify_model": config.verify_model,
-        "eval_mode": config.eval_mode,
-        "seed": config.seed,
-        "asv_stages": config.asv_stages,
-        "n_articles_processed": len(predictions),
-        "n_articles_loaded": len(articles),
     }
 
     output_dir = Path("outputs/results")
@@ -994,8 +718,48 @@ async def run_experiment(config: ExperimentConfig) -> dict[str, Any]:
     return results
 
 
+def _serialise_predictions(
+    predictions: dict[str, Prediction], article_by_id: dict[str, Article],
+) -> dict[str, dict]:
+    return {
+        aid: {
+            "article_text": article_by_id[aid].text if aid in article_by_id else "",
+            "gold_spans": [
+                {"technique": g.technique.value, "start": g.start, "end": g.end}
+                for g in (article_by_id[aid].gold_spans if aid in article_by_id else [])
+            ],
+            "all_spans": [
+                {
+                    "technique": s.technique.value,
+                    "span_text": s.span_text,
+                    "start": s.start, "end": s.end,
+                    "reasoning": s.reasoning,
+                    "agreement_count": s.agreement_count,
+                    "verdict": s.verdict,
+                    "pass_id": s.pass_id,
+                    "original_technique": (
+                        s.original_technique.value if s.original_technique else None
+                    ),
+                    "original_span_text": s.original_span_text,
+                    "original_start": s.original_start,
+                    "original_end": s.original_end,
+                    "was_relabeled": s.was_relabeled,
+                    "was_trimmed": s.was_trimmed,
+                    "consol_action": s.consol_action,
+                    "stage_history": s.stage_history,
+                }
+                for s in pred.spans
+            ],
+            "stage_snapshots": pred.stage_snapshots,
+            "stage_outputs": pred.stage_outputs,
+            "confirmed_count": len(pred.confirmed_spans),
+            "total_count": len(pred.spans),
+        }
+        for aid, pred in predictions.items()
+    }
+
+
 def _print_diagnostic_summary(diagnostics: dict, name: str) -> None:
-    # ASCII only: Windows consoles often use cp1252 and cannot print box-drawing.
     print(f"\n{'-' * 60}")
     print(f"  DIAGNOSTICS - {name}")
     print(f"{'-' * 60}")
@@ -1020,10 +784,6 @@ def _print_diagnostic_summary(diagnostics: dict, name: str) -> None:
             f"{lucky['total_neutral']} neutral)"
         )
         print(f"    Gain ratio: {ratio_s}  |  Net F1 contribution: {net:+d}")
-        verdict_counts: dict[str, int] = {}
-        for d in lucky["per_technique"].values():
-            verdict_counts[d["verdict"]] = verdict_counts.get(d["verdict"], 0) + 1
-        print(f"    Per-technique verdicts: {verdict_counts}")
 
     drop_q = diagnostics.get("drop_quality", {})
     if drop_q.get("total_dropped", 0) > 0:
@@ -1033,22 +793,12 @@ def _print_diagnostic_summary(diagnostics: dict, name: str) -> None:
             f"{drop_q['false_drops']} were gold -> false drop rate {fdr:.1%}"
         )
 
-    agreement = diagnostics.get("agreement_vs_correctness", {})
-    if agreement:
-        print("  Precision by agreement:")
-        for ac, d in sorted(agreement.items()):
-            print(
-                f"    {ac}/3 (n={d['total']:4d}):  "
-                f"SI={d['si_precision']:.3f}  TC={d['tc_precision']:.3f}"
-            )
-
     disobey = diagnostics.get("refiner_disobedience", {})
     if disobey.get("total_disobey_events", 0) > 0:
         print(
             f"  Refiner disobeyed 'no drops' rule: "
             f"{disobey['total_disobey_events']} events across "
-            f"{disobey['articles_with_disobey']}/{disobey['total_articles']} articles "
-            f"({disobey['disobey_rate_per_article']:.1%} of articles)"
+            f"{disobey['articles_with_disobey']}/{disobey['total_articles']} articles"
         )
 
     print(f"{'-' * 60}\n")

@@ -22,7 +22,6 @@ from src.evaluation.postrun import (
     plot_per_pass_f1,
     plot_per_technique_stage_delta,
     plot_relabel_quality_matrix,
-    point_biserial_agreement,
     stage_f1_corrected,
 )
 
@@ -376,32 +375,6 @@ def main() -> None:
             lines.append(traceback.format_exc())
             print(f"    {name}: ERROR — {e}", flush=True)
     print(f"  [Item 5b] Done.\n", flush=True)
-
-    # === Item 6: Point-biserial correlation ===
-    print(f"  [Item 6] Point-biserial correlation ...", flush=True)
-    lines.append(header("ITEM 6: Point-biserial correlation (agreement vs correctness)"))
-    lines.append(f"{'Strategy':<12} {'r_pb':>10} {'p_value':>10} {'n_spans':>10}")
-    lines.append("-" * 44)
-    for name in ["asv", "consol", "hybrid"]:
-        paths = [p for p in result_paths if name in p.name]
-        if not paths:
-            continue
-        try:
-            pb = point_biserial_agreement(paths[0])
-            if pb["r_pb"] is not None:
-                lines.append(
-                    f"{pb['strategy']:<12} "
-                    f"{pb['r_pb']:>+10.4f} "
-                    f"{pb['p_value']:>10.4f} "
-                    f"{pb['n_spans']:>10}"
-                )
-            else:
-                lines.append(
-                    f"{name}: insufficient data ({pb.get('note', 'N/A')})"
-                )
-        except Exception as e:
-            lines.append(f"{name}: ERROR — {e}")
-    print(f"  [Item 6] Done.\n", flush=True)
 
     # === Item 7: Six-category error classification ===
     print(f"  [Item 7] Error classification ...", flush=True)

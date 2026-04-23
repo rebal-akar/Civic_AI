@@ -1,26 +1,16 @@
-"""
-Diagnostic metrics for multi-stage propaganda detection pipelines.
+"""Diagnostic metrics for multi-stage detection pipelines.
 
-Computes:
-1. Label-change log — every (original, new, action, agreement, correct_before/after)
-2. 14x14 relabel matrix — confusion matrix of technique corrections
-3. Lucky-vs-systematic analysis — gains vs losses per technique from relabelling
-4. Drop quality — false drop rate (dropped candidates that were actually gold)
-5. Stage-by-stage F1 — F1 computed from stage_snapshots at each pipeline stage
-6. Agreement-vs-correctness — per-agreement-count precision
-
-All diagnostics are computed from Prediction.stage_snapshots + gold labels.
+Computes per-stage F1, label-change log, relabel confusion matrix, lucky-vs-
+systematic gain analysis, drop quality (false drop rate), agreement-vs-
+correctness, and refiner disobedience rate.
 """
 from __future__ import annotations
 
-import re
 from collections import defaultdict
 from typing import Any
 
 from src.schemas import Article, GoldSpan, Prediction, Technique
 
-
-# ── Helpers ────────────────────────────────────────────────────────────────
 
 def _span_matches_gold(
     pred_technique: str,
@@ -31,13 +21,7 @@ def _span_matches_gold(
     article_text: str,
     overlap_threshold: float = 0.25,
 ) -> tuple[bool, bool]:
-    """Check if a predicted span matches gold.
-
-    Returns (si_match, tc_match):
-        si_match = span overlap >= threshold with any gold span (any technique)
-        tc_match = overlap >= threshold AND same technique
-    """
-    # If pred_start unresolved, try to resolve from text
+    """Return (si_match, tc_match) for a predicted span against gold."""
     if pred_start < 0:
         idx = article_text.find(pred_text)
         if idx >= 0:
@@ -46,8 +30,7 @@ def _span_matches_gold(
         else:
             return False, False
 
-    si_match = False
-    tc_match = False
+    si_match = tc_match = False
     for g in gold_spans:
         overlap_start = max(pred_start, g.start)
         overlap_end = min(pred_end, g.end)
@@ -65,13 +48,11 @@ def _span_matches_gold(
     return si_match, tc_match
 
 
-# ── 1. Label change log ───────────────────────────────────────────────────
-
 def build_label_change_log(
     articles: list[Article],
     predictions: dict[str, Prediction],
 ) -> list[dict]:
-    """Extract every consolidation decision with gold correctness before/after."""
+    """Every consolidation decision, tagged with gold correctness before and after."""
     log: list[dict] = []
     article_by_id = {a.id: a for a in articles}
 
@@ -83,7 +64,11 @@ def build_label_change_log(
             if not span.consol_action or span.consol_action == "unmatched":
                 continue
 
-            orig_tech = span.original_technique.value if span.original_technique else span.technique.value
+            orig_tech = (
+                span.original_technique.value
+                if span.original_technique
+                else span.technique.value
+            )
             orig_text = span.original_span_text or span.span_text
             orig_start = span.original_start if span.original_start >= 0 else span.start
             orig_end = span.original_end if span.original_end >= 0 else span.end
@@ -92,11 +77,7 @@ def build_label_change_log(
                 orig_tech, orig_start, orig_end, orig_text,
                 article.gold_spans, article.text,
             )
-            _, tc_after = _span_matches_gold(
-                span.technique.value, span.start, span.end, span.span_text,
-                article.gold_spans, article.text,
-            )
-            si_after, _ = _span_matches_gold(
+            si_after, tc_after = _span_matches_gold(
                 span.technique.value, span.start, span.end, span.span_text,
                 article.gold_spans, article.text,
             )
@@ -119,13 +100,8 @@ def build_label_change_log(
     return log
 
 
-# ── 2. 14x14 relabel confusion matrix ─────────────────────────────────────
-
 def build_relabel_matrix(label_log: list[dict]) -> dict[str, Any]:
-    """Build a 14x14 matrix: rows = original label, cols = new label.
-
-    Also computes per-cell F1 delta (tc_correct_after - tc_correct_before).
-    """
+    """14x14 confusion matrix of technique corrections: rows=original, cols=new."""
     techniques = [t.value for t in Technique]
     count_matrix = {o: {n: 0 for n in techniques} for o in techniques}
     improved_matrix = {o: {n: 0 for n in techniques} for o in techniques}
@@ -134,8 +110,7 @@ def build_relabel_matrix(label_log: list[dict]) -> dict[str, Any]:
     for entry in label_log:
         if not entry["was_relabeled"]:
             continue
-        o = entry["original_label"]
-        n = entry["new_label"]
+        o, n = entry["original_label"], entry["new_label"]
         if o not in count_matrix or n not in count_matrix[o]:
             continue
         count_matrix[o][n] += 1
@@ -152,20 +127,14 @@ def build_relabel_matrix(label_log: list[dict]) -> dict[str, Any]:
     }
 
 
-# ── 3. Lucky-vs-systematic analysis ───────────────────────────────────────
-
 def lucky_vs_systematic(label_log: list[dict]) -> dict[str, Any]:
-    """Per-technique breakdown: are relabel gains systematic or noisy?
+    """Per original-technique: are relabel gains systematic or noisy?
 
-    For each ORIGINAL technique label, count:
-        gains   = relabels where tc_correct went False -> True
-        losses  = relabels where tc_correct went True -> False
-        neutral = relabels where tc_correct unchanged
-    Ratio gains/(gains+losses) > 0.7 -> systematic, 0.4-0.7 -> mixed, <0.4 -> noisy.
+    gain_ratio = gains / (gains + losses). >=0.7 systematic, >=0.4 mixed, else noisy.
     """
-    per_tech: dict[str, dict] = defaultdict(lambda: {
-        "relabels": 0, "gains": 0, "losses": 0, "neutral": 0,
-    })
+    per_tech: dict[str, dict] = defaultdict(
+        lambda: {"relabels": 0, "gains": 0, "losses": 0, "neutral": 0}
+    )
     for entry in label_log:
         if not entry["was_relabeled"]:
             continue
@@ -178,7 +147,7 @@ def lucky_vs_systematic(label_log: list[dict]) -> dict[str, Any]:
         else:
             per_tech[o]["neutral"] += 1
 
-    for tech, d in per_tech.items():
+    for d in per_tech.values():
         denom = d["gains"] + d["losses"]
         d["gain_ratio"] = d["gains"] / denom if denom > 0 else None
         if denom == 0:
@@ -194,7 +163,10 @@ def lucky_vs_systematic(label_log: list[dict]) -> dict[str, Any]:
     total_losses = sum(d["losses"] for d in per_tech.values())
     total_neutral = sum(d["neutral"] for d in per_tech.values())
     total = total_gains + total_losses + total_neutral
-    overall_ratio = total_gains / (total_gains + total_losses) if (total_gains + total_losses) > 0 else None
+    overall_ratio = (
+        total_gains / (total_gains + total_losses)
+        if (total_gains + total_losses) > 0 else None
+    )
 
     return {
         "per_technique": dict(per_tech),
@@ -207,16 +179,13 @@ def lucky_vs_systematic(label_log: list[dict]) -> dict[str, Any]:
     }
 
 
-# ── 4. Drop quality (false drop rate) ─────────────────────────────────────
-
 def drop_quality(
     articles: list[Article],
     predictions: dict[str, Prediction],
 ) -> dict[str, Any]:
-    """Of the candidates that were DROPPED, how many were actually gold?"""
+    """Of the candidates the consolidator dropped, how many were actually gold?"""
     article_by_id = {a.id: a for a in articles}
-    total_dropped = 0
-    false_drops = 0  # dropped but actually matched gold
+    total_dropped = false_drops = 0
     per_technique_dropped: dict[str, int] = defaultdict(int)
     per_technique_false: dict[str, int] = defaultdict(int)
 
@@ -228,10 +197,15 @@ def drop_quality(
             if span.consol_action != "dropped" and span.verdict != "REJECTED":
                 continue
             total_dropped += 1
-            orig_tech = span.original_technique.value if span.original_technique else span.technique.value
+            orig_tech = (
+                span.original_technique.value
+                if span.original_technique
+                else span.technique.value
+            )
             per_technique_dropped[orig_tech] += 1
             si_match, _ = _span_matches_gold(
-                orig_tech, span.original_start if span.original_start >= 0 else span.start,
+                orig_tech,
+                span.original_start if span.original_start >= 0 else span.start,
                 span.original_end if span.original_end >= 0 else span.end,
                 span.original_span_text or span.span_text,
                 article.gold_spans, article.text,
@@ -250,31 +224,21 @@ def drop_quality(
     }
 
 
-# ── 5. Stage-by-stage F1 ──────────────────────────────────────────────────
-
 def stage_by_stage_f1(
     articles: list[Article],
     predictions: dict[str, Prediction],
-    overlap_threshold: float = 0.25,
-) -> dict[str, dict[str, float]]:
-    """Compute SI/TC F1 from each stage snapshot using the official SemEval formula.
+) -> dict[str, dict[str, Any]]:
+    """Rebuild a Prediction from each stage snapshot and compute SI/TC F1.
 
-    Rebuilds a Prediction from each snapshot's spans and runs evaluate()
-    so the numbers are directly comparable to the headline metrics.
-
-    Filters each snapshot to only spans that would be "confirmed" at that stage:
-        after_s1 → all spans (union of passes)
-        after_s2 → verdict in CONFIRMED, POSSIBLE
-        after_s3 → verdict in CONFIRMED, POSSIBLE
+    Snapshot filter: after_s1 = all spans; after_s2/s3 = CONFIRMED or POSSIBLE.
     """
     from src.evaluation.metrics import evaluate
     from src.schemas import PredictedSpan, normalise_technique
 
     article_by_id = {a.id: a for a in articles}
-    stages = ["after_s1", "after_s2", "after_s3"]
-    results: dict[str, dict[str, float]] = {}
+    results: dict[str, dict[str, Any]] = {}
 
-    for stage in stages:
+    for stage in ("after_s1", "after_s2", "after_s3"):
         stage_articles = []
         stage_predictions: dict[str, Prediction] = {}
 
@@ -284,13 +248,9 @@ def stage_by_stage_f1(
                 continue
 
             snap = pred.stage_snapshots[stage]
-            if stage == "after_s1":
-                active = snap
-            else:
-                active = [
-                    s for s in snap
-                    if s.get("verdict") in ("CONFIRMED", "POSSIBLE")
-                ]
+            active = snap if stage == "after_s1" else [
+                s for s in snap if s.get("verdict") in ("CONFIRMED", "POSSIBLE")
+            ]
 
             rebuilt_spans = []
             for s in active:
@@ -304,7 +264,6 @@ def stage_by_stage_f1(
                     end=s.get("end", -1),
                     verdict=s.get("verdict", "CONFIRMED"),
                     agreement_count=s.get("agreement_count", 1),
-                    confidence=s.get("confidence", -1.0),
                 ))
 
             stage_articles.append(article)
@@ -336,60 +295,9 @@ def stage_by_stage_f1(
     return results
 
 
-# ── 6. Agreement vs correctness ───────────────────────────────────────────
-
-def agreement_vs_correctness(
-    articles: list[Article],
-    predictions: dict[str, Prediction],
-) -> dict[int, dict[str, float]]:
-    """Per-agreement-count (1, 2, 3): precision for SI and TC.
-
-    Answers: are high-agreement detections more likely to be correct?
-    """
-    article_by_id = {a.id: a for a in articles}
-    buckets: dict[int, dict[str, int]] = defaultdict(
-        lambda: {"total": 0, "si_correct": 0, "tc_correct": 0}
-    )
-    for aid, pred in predictions.items():
-        article = article_by_id.get(aid)
-        if not article:
-            continue
-        for span in pred.spans:
-            if span.verdict == "REJECTED":
-                continue
-            ac = span.agreement_count
-            buckets[ac]["total"] += 1
-            si_m, tc_m = _span_matches_gold(
-                span.technique.value, span.start, span.end, span.span_text,
-                article.gold_spans, article.text,
-            )
-            if si_m:
-                buckets[ac]["si_correct"] += 1
-            if tc_m:
-                buckets[ac]["tc_correct"] += 1
-
-    return {
-        ac: {
-            "total": d["total"],
-            "si_precision": d["si_correct"] / d["total"] if d["total"] > 0 else 0.0,
-            "tc_precision": d["tc_correct"] / d["total"] if d["total"] > 0 else 0.0,
-        }
-        for ac, d in sorted(buckets.items())
-    }
-
-
-# ── 7. Refiner disobedience ────────────────────────────────────────────────
-
-def refiner_disobedience(
-    predictions: dict[str, Prediction],
-) -> dict[str, Any]:
-    """Count how often the refinement prompt was disobeyed across articles.
-
-    Returns total disobey events and articles with at least one disobey.
-    Only meaningful for the `hybrid` strategy.
-    """
-    total = 0
-    articles_with_disobey = 0
+def refiner_disobedience(predictions: dict[str, Prediction]) -> dict[str, Any]:
+    """How often the refiner emitted drop actions despite being told not to."""
+    total = articles_with_disobey = 0
     for pred in predictions.values():
         d = pred.stage_outputs.get("stage3_refiner_disobeyed", 0)
         if d > 0:
@@ -405,8 +313,6 @@ def refiner_disobedience(
     }
 
 
-# ── Top-level: compute everything ────────────────────────────────────────
-
 def compute_all_diagnostics(
     articles: list[Article],
     predictions: dict[str, Prediction],
@@ -418,6 +324,5 @@ def compute_all_diagnostics(
         "lucky_vs_systematic": lucky_vs_systematic(label_log),
         "drop_quality": drop_quality(articles, predictions),
         "stage_by_stage_f1": stage_by_stage_f1(articles, predictions),
-        "agreement_vs_correctness": agreement_vs_correctness(articles, predictions),
         "refiner_disobedience": refiner_disobedience(predictions),
     }

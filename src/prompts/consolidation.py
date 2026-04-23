@@ -19,7 +19,7 @@ Rewrite rationale:
   diagnostic logging downstream.
 """
 
-from src.prompts.baseline import TECHNIQUE_GUIDELINES
+from src.prompts.detection import TECHNIQUE_GUIDELINES
 
 CONSOL_SYSTEM = """You are an expert annotation refiner for propaganda detection, trained on the SemEval-2020 Task 11 guidelines.
 
@@ -49,7 +49,6 @@ The most common labelling errors are:
 - Group-identity appeals mislabelled as Loaded_Language (should be Flag-Waving)
 - Fear-based arguments mislabelled as Loaded_Language (should be Appeal_to_Fear-Prejudice)
 - Causal simplifications mislabelled as Exaggeration (should be Causal_Oversimplification)
-- Hypocrisy deflections mislabelled as Doubt (should be Whataboutism,Straw_Men,Red_Herring)
 
 If a different technique fits better, RELABEL. Do not drop the candidate just because the label is wrong — RELABEL is almost always the right action.
 
