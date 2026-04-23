@@ -1,11 +1,14 @@
-"""
-Generate matplotlib bar charts from a run_all comparison JSON.
+"""Regenerate strategy-comparison charts from a saved comparison JSON.
 
-Usage:
-    uv run python -m scripts.plot_comparison \
-        --comparison-json outputs/results/comparison_gpt-4o_train_zero_shot-asv_n1.json
-"""
+Works for both the original `run_all` output shape (results under a "results"
+key alongside metadata) and the rescored shape (a flat mapping of strategy
+-> {metrics: ...}).
 
+Example:
+    python -m scripts.plot_comparison \
+        --comparison-json outputs/results/comparison_gpt-4o_..._rescored.json \
+        --output-prefix   outputs/results/comparison_gpt-4o_..._rescored
+"""
 from __future__ import annotations
 
 import argparse
@@ -15,54 +18,54 @@ from pathlib import Path
 from src.evaluation.charts import generate_comparison_charts
 
 
-def _extract_results(payload: dict) -> dict:
-    # New run_all format
+def _flatten(payload: dict) -> tuple[dict[str, dict], int | None]:
+    """Return a {strategy: {metrics: ...}} mapping plus article count if known."""
     if isinstance(payload.get("results"), dict):
-        return payload["results"]
+        block = payload["results"]
+        num = payload.get("num_articles")
+    else:
+        block = payload
+        num = None
 
-    # Backward compatibility: top-level strategy mapping
-    result_like = {
-        k: v for k, v in payload.items()
-        if isinstance(v, dict) and ("metrics" in v or "error" in v)
-    }
-    return result_like
+    flat: dict[str, dict] = {}
+    inferred: int | None = None
+    for strat, entry in block.items():
+        if not isinstance(entry, dict) or "metrics" not in entry:
+            continue
+        flat[strat] = {"metrics": entry["metrics"]}
+        processed = entry.get("articles_processed") or entry.get("articles_scored")
+        if isinstance(processed, int):
+            inferred = max(inferred or 0, processed)
+
+    return flat, num or inferred
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Plot strategy comparison charts")
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--comparison-json", required=True, type=Path)
+    parser.add_argument("--output-prefix", required=True, type=Path)
     parser.add_argument(
-        "--comparison-json",
-        type=str,
-        required=True,
-        help="Path to comparison JSON produced by src.run_all",
-    )
-    parser.add_argument(
-        "--output-prefix",
-        type=str,
+        "--num-articles",
+        type=int,
         default=None,
-        help="Optional output prefix (without extension). Defaults near JSON file.",
+        help="Override article count displayed in chart titles.",
     )
     args = parser.parse_args()
 
-    json_path = Path(args.comparison_json)
-    payload = json.loads(json_path.read_text(encoding="utf-8"))
-    results_by_strategy = _extract_results(payload)
+    payload = json.loads(args.comparison_json.read_text(encoding="utf-8"))
+    results, inferred_n = _flatten(payload)
 
-    if args.output_prefix:
-        out_prefix = Path(args.output_prefix)
-    else:
-        out_prefix = json_path.with_suffix("")
+    if not results:
+        raise SystemExit(f"No strategies with metrics found in {args.comparison_json}")
 
-    chart_paths = generate_comparison_charts(results_by_strategy, out_prefix)
-    if not chart_paths:
-        print("No charts generated (no successful strategy results).")
-        return
+    paths = generate_comparison_charts(
+        results, args.output_prefix, args.num_articles or inferred_n,
+    )
 
-    print("Generated charts:")
-    for p in chart_paths:
-        print(f"  - {p}")
+    print("Charts written:")
+    for p in paths:
+        print(f"  {p}")
 
 
 if __name__ == "__main__":
     main()
-

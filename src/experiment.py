@@ -995,9 +995,10 @@ async def run_experiment(config: ExperimentConfig) -> dict[str, Any]:
 
 
 def _print_diagnostic_summary(diagnostics: dict, name: str) -> None:
-    print(f"\n{'─' * 60}")
-    print(f"  DIAGNOSTICS — {name}")
-    print(f"{'─' * 60}")
+    # ASCII only: Windows consoles often use cp1252 and cannot print box-drawing.
+    print(f"\n{'-' * 60}")
+    print(f"  DIAGNOSTICS - {name}")
+    print(f"{'-' * 60}")
 
     stages = diagnostics.get("stage_by_stage_f1", {})
     if stages:
@@ -1029,7 +1030,7 @@ def _print_diagnostic_summary(diagnostics: dict, name: str) -> None:
         fdr = drop_q["false_drop_rate"]
         print(
             f"  Drops: {drop_q['total_dropped']} total, "
-            f"{drop_q['false_drops']} were gold  →  false drop rate {fdr:.1%}"
+            f"{drop_q['false_drops']} were gold -> false drop rate {fdr:.1%}"
         )
 
     agreement = diagnostics.get("agreement_vs_correctness", {})
@@ -1050,4 +1051,4 @@ def _print_diagnostic_summary(diagnostics: dict, name: str) -> None:
             f"({disobey['disobey_rate_per_article']:.1%} of articles)"
         )
 
-    print(f"{'─' * 60}\n")
+    print(f"{'-' * 60}\n")

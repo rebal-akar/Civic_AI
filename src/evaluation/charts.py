@@ -42,6 +42,7 @@ def _add_bar_labels(ax, bars, fmt=".3f"):
 def generate_comparison_charts(
     results_by_strategy: dict[str, dict[str, Any]],
     output_prefix: Path,
+    num_articles: int | None = None,
 ) -> list[Path]:
     output_prefix.parent.mkdir(parents=True, exist_ok=True)
     successful = {
@@ -54,7 +55,7 @@ def generate_comparison_charts(
     written: list[Path] = []
     strategies = list(successful.keys())
 
-    fig1 = _plot_overall_f1(successful, strategies)
+    fig1 = _plot_overall_f1(successful, strategies, num_articles)
     p1 = output_prefix.with_name(f"{output_prefix.name}_overall_f1.png")
     fig1.savefig(p1, dpi=180, bbox_inches="tight")
     plt.close(fig1)
@@ -66,7 +67,7 @@ def generate_comparison_charts(
     plt.close(fig2)
     written.append(p2)
 
-    fig3 = _plot_per_technique_f1(successful, strategies)
+    fig3 = _plot_per_technique_f1(successful, strategies, num_articles)
     p3 = output_prefix.with_name(f"{output_prefix.name}_technique_f1.png")
     fig3.savefig(p3, dpi=180, bbox_inches="tight")
     plt.close(fig3)
@@ -78,6 +79,7 @@ def generate_comparison_charts(
 def _plot_overall_f1(
     results_by_strategy: dict[str, dict[str, Any]],
     strategies: list[str],
+    num_articles: int | None = None,
 ):
     """Chart 1: Main metrics — SI F1, TC F1, Macro F1 per strategy."""
     metric_keys = ["si_f1", "tc_f1", "macro_f1"]
@@ -95,7 +97,8 @@ def _plot_overall_f1(
         )
         _add_bar_labels(ax, bars)
 
-    ax.set_title("Overall Strategy Comparison (100 articles)", fontsize=14, fontweight="bold")
+    suffix = f" ({num_articles} articles)" if num_articles else ""
+    ax.set_title(f"Overall Strategy Comparison{suffix}", fontsize=14, fontweight="bold")
     ax.set_ylabel("Score")
     ax.set_ylim(0, min(1.0, ax.get_ylim()[1] * 1.15))
     ax.set_xticks(x)
@@ -147,6 +150,7 @@ def _plot_recall_f1(
 def _plot_per_technique_f1(
     results_by_strategy: dict[str, dict[str, Any]],
     strategies: list[str],
+    num_articles: int | None = None,
 ):
     """Chart 3: Per-technique F1 for all techniques across strategies."""
     technique_names: set[str] = set()
@@ -179,8 +183,11 @@ def _plot_per_technique_f1(
             x - 0.4 + (i + 0.5) * width, vals,
             width=width, label=strategy, color=_color_for(strategy),
         )
+        _add_bar_labels(ax, bars, fmt=".2f")
 
-    ax.set_title("Per-Technique F1 Score by Strategy", fontsize=14, fontweight="bold")
+    suffix = f" ({num_articles} articles)" if num_articles else ""
+    ax.set_title(f"Per-Technique F1 Score by Strategy{suffix}",
+                 fontsize=14, fontweight="bold")
     ax.set_ylabel("F1 Score")
     ax.set_ylim(0, min(1.0, ax.get_ylim()[1] * 1.1))
     ax.set_xticks(x)
